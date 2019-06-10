@@ -1,0 +1,66 @@
+{
+	"name": "fsm.svg",
+	"version": "0.1.0-alpha.3",
+	"description": "svg for state machine.",
+	"main": "lib/index.js",
+	"scripts": {
+		"build": "node build/build.main.js",
+		"lint": "eslint src test",
+		"test": "jest",
+		"test:cov": "jest --coverage --runInBand --forceExit  && codecov",
+		"release": "bash build/release.sh"
+	},
+	"husky": {
+		"hooks": {
+			"commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/wanderBee/fsm-svg.git"
+	},
+	"keywords": [
+		"svg state-machine"
+	],
+	"author": "pengfei.wang",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/wanderBee/fsm-svg/issues"
+	},
+	"homepage": "https://github.com/wanderBee/fsm-svg#readme",
+	"dependencies": {
+		"color": "^3.1.2",
+		"snapsvg": "^0.5.1"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.4.4",
+		"@babel/core": "^7.4.5",
+		"@babel/polyfill": "^7.4.4",
+		"@babel/preset-env": "^7.4.5",
+		"@babel/preset-typescript": "^7.3.3",
+		"@commitlint/cli": "^7.6.1",
+		"@commitlint/config-angular": "^7.6.0",
+		"@types/jest": "^24.0.13",
+		"babel-jest": "^24.8.0",
+		"babel-loader": "^8.0.6",
+		"babel-polyfill": "^6.26.0",
+		"codecov": "^3.5.0",
+		"eslint": "^5.16.0",
+		"express": "^4.17.1",
+		"husky": "^2.3.0",
+		"jest": "^24.8.0",
+		"jquery": "^3.4.1",
+		"jsdom": "^15.1.1",
+		"rollup": "^1.14.6",
+		"rollup-plugin-buble": "^0.19.6",
+		"rollup-plugin-commonjs": "^10.0.0",
+		"rollup-plugin-node-resolve": "^5.0.1",
+		"rollup-plugin-replace": "^2.2.0",
+		"terser": "^4.0.0",
+		"ts-jest": "^24.0.2",
+		"typescript": "^3.5.1",
+		"webpack": "^4.33.0",
+		"webpack-dev-middleware": "^3.7.0",
+		"webpack-hot-middleware": "^2.25.0"
+	}
+}
