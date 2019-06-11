@@ -1,4 +1,4 @@
-import { forEachValue, assert } from "./util";
+import { forEachValue, assert, getStyleWidth, getStyleHeight } from "./util";
 
 // Base state data struct for state-machine, package with some attribute and method
 export default class State {
@@ -17,7 +17,10 @@ export default class State {
 		this.color = options.color || "#ffffff";
 		this.labelText = options.label || "Default";
 
-		let { cx, cy, circleR = 25, position = 'left' } = Object.assign(getCenterOfSvgElement(this._canvas.node), options);
+		let { cx, cy, circleR = 25, position = "left" } = Object.assign(
+			getCenterOfSvgElement(this._canvas.node),
+			options
+		);
 
 		// a circle to mark a state
 		this.renderCircle(cx, cy, circleR);
@@ -39,7 +42,10 @@ export default class State {
 		let labelOffset = 10,
 			circle = this.g.circle,
 			label,
-			x = pos === 'left' ? cx - circle.r - labelOffset : cx + circle.r + labelOffset,
+			x =
+				pos === "left"
+					? cx - circle.r - labelOffset
+					: cx + circle.r + labelOffset,
 			y = cy,
 			option = {
 				color: this.color,
@@ -55,8 +61,9 @@ export default class State {
 }
 
 function getCenterOfSvgElement(elem) {
-	let w = elem.getAttribute("width");
-	let h = elem.getAttribute("height");
+	let w = getStyleWidth(elem);
+	let h = getStyleHeight(elem);
+	console.log("getCenterOfSvgElement", "w, h", w, h);
 	return {
 		cx: w / 2,
 		cy: h / 2

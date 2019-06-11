@@ -2,7 +2,7 @@ Arguments:
   C:\Program Files\nodejs\node.exe C:\Users\hoboh_000\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js publish
 
 PATH: 
-  C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;E:\wangpf_2018\Android\android-sdk-windows\platform-tools;E:\wangpf_2018\Android\android-sdk-windows\tools;E:\wangpf_2018\Android\android-sdk-windows\build-tools;C:\Users\hoboh_000\AppData\Roaming\npm;D:\Program Files (x86)\Microsoft VS Code\bin;E:\wangpf_2018\Android\android-sdk-windows\platform-tools;;C:\Users\hoboh_000\AppData\Local\Programs\Microsoft VS Code Insiders\bin
+  C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;E:\wangpf_2018\Android\android-sdk-windows\platform-tools;E:\wangpf_2018\Android\android-sdk-windows\tools;E:\wangpf_2018\Android\android-sdk-windows\build-tools;C:\Users\hoboh_000\AppData\Roaming\npm;D:\Program Files (x86)\Microsoft VS Code\bin;C:\Users\hoboh_000\AppData\Local\Programs\Microsoft VS Code Insiders\bin
 
 Yarn version: 
   1.16.0
@@ -14,7 +14,7 @@ Platform:
   win32 x64
 
 Trace: 
-  Error: https://registry.npm.taobao.org/-/user/org.couchdb.user:wanderBee: [conflict] User wanderBee already exists
+  Error: http://registry.npm.taobao.org/-/user/org.couchdb.user:wanderBee: [conflict] User wanderBee already exists
       at Request.params.callback [as _callback] (C:\Users\hoboh_000\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:66091:18)
       at Request.self.callback (C:\Users\hoboh_000\AppData\Roaming\npm\node_modules\yarn\lib\cli.js:129590:22)
       at Request.emit (events.js:182:13)
@@ -29,9 +29,9 @@ Trace:
 npm manifest: 
   {
   	"name": "fsm.svg",
-  	"version": "0.1.0-alpha.3",
+  	"version": "0.1.0-alpha.4",
   	"description": "svg for state machine.",
-  	"main": "lib/index.js",
+  	"main": "src/index.js",
   	"scripts": {
   		"build": "node build/build.main.js",
   		"lint": "eslint src test",
@@ -77,6 +77,7 @@ npm manifest:
   		"eslint": "^5.16.0",
   		"express": "^4.17.1",
   		"husky": "^2.3.0",
+  		"imports-loader": "^0.8.0",
   		"jest": "^24.8.0",
   		"jquery": "^3.4.1",
   		"jsdom": "^15.1.1",
@@ -3506,6 +3507,14 @@ Lockfile:
     dependencies:
       pkg-dir "^3.0.0"
       resolve-cwd "^2.0.0"
+  
+  imports-loader@^0.8.0:
+    version "0.8.0"
+    resolved "https://registry.npmjs.org/imports-loader/-/imports-loader-0.8.0.tgz#030ea51b8ca05977c40a3abfd9b4088fe0be9a69"
+    integrity sha512-kXWL7Scp8KQ4552ZcdVTeaQCZSLW+e6nJfp3cwUMB673T7Hr98Xjx5JK+ql7ADlJUvj1JS5O01RLbKoutN5QDQ==
+    dependencies:
+      loader-utils "^1.0.2"
+      source-map "^0.6.1"
   
   imurmurhash@^0.1.4:
     version "0.1.4"

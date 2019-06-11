@@ -1,5 +1,4 @@
-import "babel-polyfill";
-import fsmsvg from "../../dist/fsm-svg.esm";
+import fsmsvg from "fsm.svg";
 console.log(">>> fsmsvg:", fsmsvg);
 
 var fsm = fsmsvg({
@@ -20,4 +19,4 @@ var fsm = fsmsvg({
 	]
 });
 
-console.log('>>fsm:', fsm, fsm.states);
+console.log(">>fsm:", fsm, fsm.states);

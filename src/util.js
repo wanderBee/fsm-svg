@@ -44,3 +44,15 @@ export function forEachValue(obj, fn) {
 export function assert(condition, msg) {
 	if (!condition) throw new Error(`[vuex] ${msg}`);
 }
+
+export function getStyles(dom) {
+	return window.getComputedStyle(dom);
+}
+
+export function getStyleWidth(dom) {
+	return parseInt(getStyles(dom).getPropertyValue("width"));
+}
+
+export function getStyleHeight(dom) {
+	return parseInt(getStyles(dom).getPropertyValue("height"));
+}

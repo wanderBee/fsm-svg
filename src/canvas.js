@@ -1,3 +1,5 @@
+import { getStyleWidth, getStyleHeight } from "./util";
+
 let Snap;
 export default class Canvas {
 	constructor(_Snap, selector) {
@@ -40,24 +42,17 @@ function createSvgElement(dom) {
 	return svg;
 }
 
-function getStyles(dom) {
-	return window.getComputedStyle(dom);
-}
-function getStyleWidth(dom) {
-	return parseInt(getStyles(dom).getPropertyValue("width"));
-}
-function getStyleHeight(dom) {
-	return parseInt(getStyles(dom).getPropertyValue("height"));
-}
-function getWidthAndHeight(dom){
-	if(!dom){
+function getWidthAndHeight(dom) {
+	if (!dom) {
 		return {
 			w: DEFAULTS.width,
 			h: DEFAULTS.height
-		}
+		};
 	}
+	const w = getStyleWidth(dom);
+	const h = getStyleHeight(dom);
 	return {
 		w: getStyleWidth(dom) || DEFAULTS.width,
 		h: getStyleHeight(dom) || DEFAULTS.height
-	}
+	};
 }

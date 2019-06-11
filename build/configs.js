@@ -71,7 +71,7 @@ function genConfig(opts) {
 
 	config.input.plugins.push(
 		commonjs({
-			// include: "node_modules/snapsvg/**"
+			include: "node_modules/snapsvg/**"
 		})
 	);
 

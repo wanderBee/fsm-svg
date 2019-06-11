@@ -3,6 +3,7 @@
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
+console.log('============ fsm-svg.esm.js/.///')
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function createCommonjsModule(fn, module) {
