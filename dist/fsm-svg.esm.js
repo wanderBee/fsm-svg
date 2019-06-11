@@ -1,9 +1,8 @@
 /**
- * fsm.svg v0.1.0-alpha.1
+ * fsm.svg v0.1.0-alpha.6
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
-console.log('============ fsm-svg.esm.js/.///')
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 function createCommonjsModule(fn, module) {
@@ -11228,6 +11227,18 @@ function assert(condition, msg) {
 	if (!condition) { throw new Error(("[vuex] " + msg)); }
 }
 
+function getStyles(dom) {
+	return window.getComputedStyle(dom);
+}
+
+function getStyleWidth(dom) {
+	return parseInt(getStyles(dom).getPropertyValue("width"));
+}
+
+function getStyleHeight(dom) {
+	return parseInt(getStyles(dom).getPropertyValue("height"));
+}
+
 var Snap;
 var Canvas = function Canvas(_Snap, selector) {
 	if (typeof selector === "string") {
@@ -11272,26 +11283,19 @@ function createSvgElement(dom) {
 	return svg;
 }
 
-function getStyles(dom) {
-	return window.getComputedStyle(dom);
-}
-function getStyleWidth(dom) {
-	return parseInt(getStyles(dom).getPropertyValue("width"));
-}
-function getStyleHeight(dom) {
-	return parseInt(getStyles(dom).getPropertyValue("height"));
-}
-function getWidthAndHeight(dom){
-	if(!dom){
+function getWidthAndHeight(dom) {
+	if (!dom) {
 		return {
 			w: DEFAULTS.width,
 			h: DEFAULTS.height
-		}
+		};
 	}
+	var w = getStyleWidth(dom);
+	var h = getStyleHeight(dom);
 	return {
 		w: getStyleWidth(dom) || DEFAULTS.width,
 		h: getStyleHeight(dom) || DEFAULTS.height
-	}
+	};
 }
 
 // Base state data struct for state-machine, package with some attribute and method
@@ -11312,11 +11316,14 @@ var State = function State(options) {
 	this.color = options.color || "#ffffff";
 	this.labelText = options.label || "Default";
 
-	var ref = Object.assign(getCenterOfSvgElement(this._canvas.node), options);
+	var ref = Object.assign(
+		getCenterOfSvgElement(this._canvas.node),
+		options
+	);
 	var cx = ref.cx;
 	var cy = ref.cy;
 	var circleR = ref.circleR; if ( circleR === void 0 ) circleR = 25;
-	var position = ref.position; if ( position === void 0 ) position = 'left';
+	var position = ref.position; if ( position === void 0 ) position = "left";
 
 	// a circle to mark a state
 	this.renderCircle(cx, cy, circleR);
@@ -11338,7 +11345,10 @@ State.prototype.renderLabel = function renderLabel (cx, cy, pos) {
 	var labelOffset = 10,
 		circle = this.g.circle,
 		label,
-		x = pos === 'left' ? cx - circle.r - labelOffset : cx + circle.r + labelOffset,
+		x =
+			pos === "left"
+				? cx - circle.r - labelOffset
+				: cx + circle.r + labelOffset,
 		y = cy,
 		option = {
 			color: this.color,
@@ -11353,8 +11363,9 @@ State.prototype.renderLabel = function renderLabel (cx, cy, pos) {
 };
 
 function getCenterOfSvgElement(elem) {
-	var w = elem.getAttribute("width");
-	var h = elem.getAttribute("height");
+	var w = getStyleWidth(elem);
+	var h = getStyleHeight(elem);
+	console.log("getCenterOfSvgElement", "w, h", w, h);
 	return {
 		cx: w / 2,
 		cy: h / 2
@@ -11414,51 +11425,50 @@ function registerStates(fsm, states) {
 	});
 }
 
-function getColor(fsm){
-	var Default_Colors = ['#8FBC8F', '#EC0000', '#A64EA6'];
-	return Default_Colors[fsm._states.length] || '#fff'
+function getColor(fsm) {
+	var Default_Colors = ["#8FBC8F", "#EC0000", "#A64EA6"];
+	return Default_Colors[fsm._states.length] || "#fff";
 }
 
-function getTransformOption(fsm, statesCount, stateIndex){
-	console.log('getTransformOption:', statesCount, stateIndex);
-	if(statesCount == 0 || statesCount == 1){
+function getTransformOption(fsm, statesCount, stateIndex) {
+	if (statesCount == 0 || statesCount == 1) {
 		return getCenterOfSvgElement$1(fsm._canvas.node);
-	}else if(statesCount == 2){
+	} else if (statesCount == 2) {
 		return transformByStartAngle(fsm, statesCount, stateIndex, -180);
-	}else if(statesCount == 3){
+	} else if (statesCount == 3) {
 		return transformByStartAngle(fsm, statesCount, stateIndex, -90);
-	}else if(statesCount == 4){
+	} else if (statesCount == 4) {
 		return transformByStartAngle(fsm, statesCount, stateIndex, -135);
-	}else {
+	} else {
 		return transformByStartAngle(fsm, statesCount, stateIndex, -180);
 	}
 }
 
-function transformByStartAngle(fsm, statesCount, stateIndex, startAngle){
-	var tranformAngle = 360/statesCount;
-	var displayCircleR = Math.max(Math.min(fsm._canvas.width, fsm._canvas.height) - 100, 40)/2;
+function transformByStartAngle(fsm, statesCount, stateIndex, startAngle) {
+	var tranformAngle = 360 / statesCount;
+	var displayCircleR =
+		Math.max(Math.min(fsm._canvas.width, fsm._canvas.height, 320), 40) / 2;
 
 	var theta = startAngle + tranformAngle * stateIndex;
-	var thetaFPi = theta / 180 * Math.PI;
+	var thetaFPi = (theta / 180) * Math.PI;
 	var ref = getCenterOfSvgElement$1(fsm._canvas.node);
 	var cx = ref.cx;
 	var cy = ref.cy;
 	return {
 		cx: cx + displayCircleR * Math.cos(thetaFPi),
 		cy: cy + displayCircleR * Math.sin(thetaFPi),
-		position: (theta > -90 && theta < 90) ? 'right' : 'left'
-	}
+		position: theta > -90 && theta < 90 ? "right" : "left"
+	};
 }
 
 function getCenterOfSvgElement$1(elem) {
-	var w = elem.getAttribute("width");
-	var h = elem.getAttribute("height");
+	var w = getStyleWidth(elem);
+	var h = getStyleHeight(elem);
 	return {
 		cx: w / 2,
 		cy: h / 2
 	};
 }
-
 
 function install(_Snap) {
 	Snap$1 = _Snap;
