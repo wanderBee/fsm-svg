@@ -5,9 +5,8 @@
 "use strict";
 
 import Snap from "./snap";
-import { Fsm, install } from "./fsm";
+import Fsm from "./fsm";
 
-export default function fsm(options) {
-	install(Snap);
+export default function(options) {
 	return new Fsm(options);
 }

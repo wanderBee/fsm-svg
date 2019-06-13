@@ -8,7 +8,6 @@
 
 import Snap from "../src/snap";
 import Canvas from "../src/canvas";
-const $ = require("jquery");
 
 describe("Canvas", () => {
 	var doc;
@@ -22,27 +21,29 @@ describe("Canvas", () => {
 	});
 
 	it("create a canvas by no arguments, has default width/height", () => {
-		var c = new Canvas(Snap);
+		var c = new Canvas().canvas;
 		expect(c).toBeDefined();
+
 		expect(c.node).toBeTruthy();
 		expect(c.node.getAttribute("width")).toBe("300");
 		expect(c.node.getAttribute("height")).toBe("300");
 	});
 
 	it("create a canvas by a svgElement", () => {
-		var c = new Canvas(Snap, "#demo");
+		var c = new Canvas("#demo").canvas;
 		expect(c).toBeDefined();
+
 		expect(c.node).toBeTruthy();
 		expect(c.node.getAttribute("width")).toBe("100");
 		expect(c.node.getAttribute("height")).toBe("100");
 	});
 
 	it("create a canvas by a normal Element", () => {
-		var c = new Canvas(Snap, "#demo2");
-
+		var c = new Canvas("#demo2").canvas;
 		expect(c).toBeDefined();
-		expect(c.node).toBeTruthy();
+
 		// 父节点是demo2
+		expect(c.node).toBeTruthy();
 		expect(c.node.parentNode.id).toEqual("demo2");
 		expect(c.node.getAttribute("width")).toBe("200");
 		expect(c.node.getAttribute("height")).toBe("200");

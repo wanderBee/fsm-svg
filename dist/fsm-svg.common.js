@@ -1,5 +1,5 @@
 /**
- * fsm.svg v0.1.0-alpha.6
+ * fsm.svg v0.1.0-alpha.7
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
@@ -11133,14 +11133,12 @@ snap_svg.plugin(function(Snap, Element, Paper) {
 	Paper.prototype.circle = function(cx, cy, r, color$1) {
 		var circle = __paper_proto_circle.call(this, cx, cy, r);
 		if (color$1) {
-			circle.node.setAttribute("fill", color$1);
-			circle.node.setAttribute(
-				"stroke",
-				color(color$1)
-					.darken(darkenRatio)
-					.hex()
-			);
+			circle.stroke = color(color$1)
+				.darken(darkenRatio)
+				.hex();
+			circle.node.setAttribute("stroke", circle.stroke);
 			circle.node.setAttribute("stroke-width", 2);
+			circle.node.setAttribute("fill", color$1);
 		}
 
 		return circle;
@@ -11241,14 +11239,22 @@ function getStyleHeight(dom) {
 	return parseInt(getStyles(dom).getPropertyValue("height"));
 }
 
-var Snap;
-var Canvas = function Canvas(_Snap, selector) {
+function getCenterOfElement(elem) {
+	var w = getStyleWidth(elem) || elem.getAttribute("width");
+	var h = getStyleHeight(elem) || elem.getAttribute("height");
+	return {
+		cx: w / 2,
+		cy: h / 2
+	};
+}
+
+var Canvas = function Canvas(selector) {
 	if (typeof selector === "string") {
 		selector = document.querySelector(selector);
 	}
 
-	Snap = _Snap;
-	return wrap(selector);
+	this._canvas = wrap(selector);
+	this.Snap = snap_svg;
 };
 
 var DEFAULTS = {
@@ -11260,12 +11266,12 @@ function wrap(dom) {
 	var wrapped;
 	if (dom instanceof Element) {
 		if (dom.tagName.toLowerCase() == "svg") {
-			wrapped = Snap(dom);
+			wrapped = snap_svg(dom);
 		} else {
-			wrapped = Snap(createSvgElement(dom));
+			wrapped = snap_svg(createSvgElement(dom));
 		}
 	} else {
-		wrapped = Snap(DEFAULTS.width, DEFAULTS.height);
+		wrapped = snap_svg(DEFAULTS.width, DEFAULTS.height);
 	}
 	var ref = getWidthAndHeight(dom);
 	var w = ref.w;
@@ -11305,7 +11311,7 @@ var State = function State(options) {
 	if ( options === void 0 ) options = {};
 
 	if (process.env.NODE_ENV !== "production") {
-		assert(options.canvas, "state must have a canvas for rendering.");
+		assert(options.canvas, "state must have a Canvas for rendering.");
 		assert(
 			options.canvas.node instanceof SVGElement,
 			"state must have a svg canvas for rendering."
@@ -11319,7 +11325,8 @@ var State = function State(options) {
 	this.labelText = options.label || "Default";
 
 	var ref = Object.assign(
-		getCenterOfSvgElement(this._canvas.node),
+		{},
+		getCenterOfElement(this._canvas.node),
 		options
 	);
 	var cx = ref.cx;
@@ -11364,14 +11371,81 @@ State.prototype.renderLabel = function renderLabel (cx, cy, pos) {
 	this.g.label = label;
 };
 
-function getCenterOfSvgElement(elem) {
-	var w = getStyleWidth(elem);
-	var h = getStyleHeight(elem);
-	console.log("getCenterOfSvgElement", "w, h", w, h);
+var Point = function Point(x, y) {
+	this.x = x;
+	this.y = y;
+};
+
+var Link = function Link(source, target, options) {
+	if ( options === void 0 ) options = {};
+
+	if (process.env.NODE_ENV !== "production") {
+		assert(source instanceof Point, "argument[0] should be a point.");
+		assert(target instanceof Point, "argument[1] should be a point.");
+	}
+
+	this.source = source;
+	this.target = target;
+
+	var curv = options.curv; if ( curv === void 0 ) curv = 0;
+	var markerSize = options.markerSize; if ( markerSize === void 0 ) markerSize = 7;
+	this.markerSize = markerSize;
+
+	genLinkPath(this, source, target, curv, markerSize);
+};
+
+function genLinkPath(link, source, target, curv, markerSize) {
+	link.path = svgPathCurv(source.x, source.y, target.x, target.y, curv);
+	link.marker = svgTriangleMarker(markerSize);
+}
+
+function svgTriangleMarker(size) {
 	return {
-		cx: w / 2,
-		cy: h / 2
+		path: ("M2,2 L2," + (2 + size) + " L" + (2 + (size / 2) * 3) + "," + (size / 2 + 2) + " L2,2 Z"),
+		x: 0,
+		y: 0,
+		width: 2 * size,
+		height: 2 * size,
+		refX: 2 + (size / 2) * 3,
+		refY: size / 2 + 2
 	};
+}
+
+function svgPathCurv(x1, y1, x2, y2, curv) {
+	/*
+	 * quadratic Bezier curve
+	 */
+	curv = curv >= -1 && curv <= 1 ? curv : 0;
+	var cf = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) / 2;
+	var s,
+		k2,
+		controX,
+		controY,
+		q,
+		l,
+		path = "";
+	s = "M" + x1 + "," + y1 + " ";
+
+	k2 = -(x2 - x1) / (y2 - y1);
+
+	if (k2 < 2 && k2 > -2) {
+		controX = (x2 + x1) / 2 + curv * cf;
+		controX = controX < 0 ? -controX : controX;
+		controY = k2 * (controX - (x1 + x2) / 2) + (y1 + y2) / 2;
+		controY = controY < 0 ? -controY : controY;
+	} else {
+		controY = (y2 + y1) / 2 + curv * cf;
+		controY = controY < 0 ? -controY : controY;
+		controX = (controY - (y1 + y2) / 2) / k2 + (x1 + x2) / 2;
+		controX = controX < 0 ? -controX : controX;
+	}
+
+	q = "Q" + controX + "," + controY + " ";
+	//l=lineto
+	l = x2 + "," + y2 + " ";
+	//eg: M30,30 Q65,65 100,100
+	path = s + q + l;
+	return path;
 }
 
 /*
@@ -11379,52 +11453,132 @@ function getCenterOfSvgElement(elem) {
 	Author pengfei.wang
 */
 
-var Snap$1;
-var Fsm = function Fsm(options) {
-	var this$1 = this;
-	if ( options === void 0 ) options = {};
+var Fsm = /*@__PURE__*/(function (Canvas) {
+	function Fsm(options) {
+		var this$1 = this;
+		if ( options === void 0 ) options = {};
 
-	if (process.env.NODE_ENV !== "production") {
-		assert(this instanceof Fsm, "fsm must be called with the new operator.");
+		Canvas.call(this, options.container);
+
+		if (process.env.NODE_ENV !== "production") {
+			assert(this instanceof Fsm, "fsm must be called with the new operator.");
+		}
+
+		var plugins = options.plugins; if ( plugins === void 0 ) plugins = [];
+		var states = options.states; if ( states === void 0 ) states = [];
+
+		this._states = [];
+
+		this._links = [];
+
+		// apply plugins
+		plugins.forEach(function (plugin) { return plugin(this$1); });
+
+		registerStates(this, states);
+
+		registerLinks(this, this._links);
 	}
 
-	var plugins = options.plugins; if ( plugins === void 0 ) plugins = [];
-	var states = options.states; if ( states === void 0 ) states = [];
-	var container = options.container;
+	if ( Canvas ) Fsm.__proto__ = Canvas;
+	Fsm.prototype = Object.create( Canvas && Canvas.prototype );
+	Fsm.prototype.constructor = Fsm;
 
-	this._canvas = new Canvas(Snap$1, container);
-	this._states = [];
+	var prototypeAccessors = { states: { configurable: true },links: { configurable: true } };
 
-	// apply plugins
-	plugins.forEach(function (plugin) { return plugin(this$1); });
+	prototypeAccessors.states.get = function () {
+		return this._states;
+	};
 
-	registerStates(this, states);
-};
+	prototypeAccessors.states.set = function (v) {
+		if (process.env.NODE_ENV !== "production") {
+			assert(false, "use fsm.replaceState() to explicit replace state.");
+		}
+	};
 
-var prototypeAccessors = { states: { configurable: true } };
+	prototypeAccessors.links.get = function () {
+		return this._links;
+	};
 
-prototypeAccessors.states.get = function () {
-	return this._states;
-};
+	Fsm.prototype.scale = function scale (stateIndex, ratio) {
+		console.log(">>>fsm._canvas:", fsm._canvas, linePath);
+		var lineLength = fsm.Snap.path.getTotalLength(linePath);
+		var newLinePath = fsm.Snap.path.getSubpath(
+			linePath,
+			0,
+			lineLength - 15 * deviation
+		);
+	};
 
-prototypeAccessors.states.set = function (v) {
-	if (process.env.NODE_ENV !== "production") {
-		assert(false, "use fsm.replaceState() to explicit replace state.");
-	}
-};
+	Object.defineProperties( Fsm.prototype, prototypeAccessors );
 
-Object.defineProperties( Fsm.prototype, prototypeAccessors );
+	return Fsm;
+}(Canvas));
 
 function registerStates(fsm, states) {
 	var statesCount = states.length;
 	forEachValue(states, function (stateOpts, index) {
 		var option = getTransformOption(fsm, statesCount, index);
 		option.color = getColor(fsm);
+		option.index = parseInt(index);
 		var newState = new State(
 			Object.assign(option, stateOpts, { canvas: fsm._canvas })
 		);
 		fsm._states.push(newState);
+		if (option.linkTo) {
+			fsm._links.push([option.index, option.linkTo]);
+		}
 	});
+}
+
+function registerLinks(fsm, links) {
+	var s_index, t_index;
+	forEachValue(links, function (linkIndex) {
+		s_index = linkIndex[0];
+		t_index = linkIndex[1];
+		link$1(fsm, fsm._states[s_index], fsm._states[t_index]);
+	});
+}
+
+function link$1(fsm, state1, state2) {
+	if (!state1 instanceof State || !state2 instanceof State) {
+		return;
+	}
+	var p1 = new Point(state1.g.circle.cx, state1.g.circle.cy);
+	var p2 = new Point(state2.g.circle.cx, state2.g.circle.cy);
+	var link = new Link(p1, p2);
+
+	// line gradient
+	var gradi = fsm._canvas.paper.gradient(
+		("L(" + (p1.x) + ", " + (p1.y) + ", " + (p2.x) + ", " + (p2.y) + ")#" + (state1.g.circle.stroke) + "-#" + (state2.g.circle.stroke))
+	);
+	// line marker-end : triangle
+	var triangleSvg = fsm._canvas.paper.path(link.marker.path).attr({
+		fill: state2.g.circle.stroke
+	});
+	console.log("gradi:", gradi);
+	var tmarker;
+	{
+		var ref = link.marker;
+		var x = ref.x;
+		var y = ref.y;
+		var width = ref.width;
+		var height = ref.height;
+		var refX = ref.refX;
+		var refY = ref.refY;
+		tmarker = triangleSvg.marker(x, y, width, height, refX - 2, refY);
+	}
+	// line bezier
+	var lpSvg = fsm._canvas.paper
+		.path(link.path)
+		.attr({
+			stroke: gradi,
+			strokeWidth: 2,
+			"marker-end": tmarker,
+			fill: "none"
+		})
+		.addClass("beziermorph");
+	// fsm._canvas.paper.g().add(lpSvg);
+	fsm.links.push(lpSvg);
 }
 
 function getColor(fsm) {
@@ -11433,47 +11587,37 @@ function getColor(fsm) {
 }
 
 function getTransformOption(fsm, statesCount, stateIndex) {
+	var transformByStartAngle = getTransformFunc(fsm, statesCount, stateIndex);
 	if (statesCount == 0 || statesCount == 1) {
-		return getCenterOfSvgElement$1(fsm._canvas.node);
+		return getCenterOfElement(fsm._canvas.node);
 	} else if (statesCount == 2) {
-		return transformByStartAngle(fsm, statesCount, stateIndex, -180);
+		return transformByStartAngle(-180);
 	} else if (statesCount == 3) {
-		return transformByStartAngle(fsm, statesCount, stateIndex, -90);
+		return transformByStartAngle(-90);
 	} else if (statesCount == 4) {
-		return transformByStartAngle(fsm, statesCount, stateIndex, -135);
+		return transformByStartAngle(-135);
 	} else {
-		return transformByStartAngle(fsm, statesCount, stateIndex, -180);
+		return transformByStartAngle(180 / statesCount - 180);
 	}
 }
 
-function transformByStartAngle(fsm, statesCount, stateIndex, startAngle) {
-	var tranformAngle = 360 / statesCount;
-	var displayCircleR =
-		Math.max(Math.min(fsm._canvas.width, fsm._canvas.height, 320), 40) / 2;
+function getTransformFunc(fsm, statesCount, stateIndex) {
+	return function(startAngle) {
+		var tranformAngle = 360 / statesCount;
+		var displayCircleR =
+			Math.max(Math.min(fsm._canvas.width, fsm._canvas.height, 320), 40) / 2;
 
-	var theta = startAngle + tranformAngle * stateIndex;
-	var thetaFPi = (theta / 180) * Math.PI;
-	var ref = getCenterOfSvgElement$1(fsm._canvas.node);
-	var cx = ref.cx;
-	var cy = ref.cy;
-	return {
-		cx: cx + displayCircleR * Math.cos(thetaFPi),
-		cy: cy + displayCircleR * Math.sin(thetaFPi),
-		position: theta > -90 && theta < 90 ? "right" : "left"
+		var theta = startAngle + tranformAngle * stateIndex;
+		var thetaFPi = (theta / 180) * Math.PI;
+		var ref = getCenterOfElement(fsm._canvas.node);
+		var cx = ref.cx;
+		var cy = ref.cy;
+		return {
+			cx: cx + displayCircleR * Math.cos(thetaFPi),
+			cy: cy + displayCircleR * Math.sin(thetaFPi),
+			position: theta > -90 && theta < 90 ? "right" : "left"
+		};
 	};
-}
-
-function getCenterOfSvgElement$1(elem) {
-	var w = getStyleWidth(elem);
-	var h = getStyleHeight(elem);
-	return {
-		cx: w / 2,
-		cy: h / 2
-	};
-}
-
-function install(_Snap) {
-	Snap$1 = _Snap;
 }
 
 /*
@@ -11481,9 +11625,8 @@ function install(_Snap) {
 	Author pengfei.wang
 */
 
-function fsm(options) {
-	install(snap_svg);
+function index(options) {
 	return new Fsm(options);
 }
 
-module.exports = fsm;
+module.exports = index;

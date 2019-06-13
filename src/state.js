@@ -1,10 +1,11 @@
-import { forEachValue, assert, getStyleWidth, getStyleHeight } from "./util";
+import { forEachValue, assert, getCenterOfElement } from "./util";
+import Canvas from "../src/canvas";
 
 // Base state data struct for state-machine, package with some attribute and method
 export default class State {
 	constructor(options = {}) {
 		if (process.env.NODE_ENV !== "production") {
-			assert(options.canvas, `state must have a canvas for rendering.`);
+			assert(options.canvas, `state must have a Canvas for rendering.`);
 			assert(
 				options.canvas.node instanceof SVGElement,
 				`state must have a svg canvas for rendering.`
@@ -16,9 +17,11 @@ export default class State {
 		this._pid = this._canvas.id;
 		this.color = options.color || "#ffffff";
 		this.labelText = options.label || "Default";
+		this.theta = options.theta; // The angle between the state's center and the canvas's center
 
 		let { cx, cy, circleR = 25, position = "left" } = Object.assign(
-			getCenterOfSvgElement(this._canvas.node),
+			{},
+			getCenterOfElement(this._canvas.node),
 			options
 		);
 
@@ -58,14 +61,4 @@ export default class State {
 		this.g.add(label);
 		this.g.label = label;
 	}
-}
-
-function getCenterOfSvgElement(elem) {
-	let w = getStyleWidth(elem);
-	let h = getStyleHeight(elem);
-	console.log("getCenterOfSvgElement", "w, h", w, h);
-	return {
-		cx: w / 2,
-		cy: h / 2
-	};
 }

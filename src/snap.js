@@ -17,14 +17,12 @@ Snap.plugin(function(Snap, Element, Paper) {
 	Paper.prototype.circle = function(cx, cy, r, color) {
 		var circle = __paper_proto_circle.call(this, cx, cy, r);
 		if (color) {
-			circle.node.setAttribute("fill", color);
-			circle.node.setAttribute(
-				"stroke",
-				Color(color)
-					.darken(darkenRatio)
-					.hex()
-			);
+			circle.stroke = Color(color)
+				.darken(darkenRatio)
+				.hex();
+			circle.node.setAttribute("stroke", circle.stroke);
 			circle.node.setAttribute("stroke-width", 2);
+			circle.node.setAttribute("fill", color);
 		}
 
 		return circle;

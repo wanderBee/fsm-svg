@@ -1,22 +1,24 @@
 import fsmsvg from "fsm.svg";
+import anime from "animejs/lib/anime.es.js";
 console.log(">>> fsmsvg:", fsmsvg);
 
 var fsm = fsmsvg({
 	container: "#demo",
 	states: [
 		{
-			label: "Normal"
+			label: "Normal",
+			linkTo: [1, 2]
 		},
 		{
-			label: "Warning"
+			label: "Warning",
+			linkTo: [0, 2]
 		},
 		{
-			label: "Problematic"
+			label: "Problematic",
+			linkTo: [1, 0]
 		},
 		{
 			label: "Exit"
 		}
 	]
 });
-
-console.log(">>fsm:", fsm, fsm.states);

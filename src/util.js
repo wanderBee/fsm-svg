@@ -56,3 +56,12 @@ export function getStyleWidth(dom) {
 export function getStyleHeight(dom) {
 	return parseInt(getStyles(dom).getPropertyValue("height"));
 }
+
+export function getCenterOfElement(elem) {
+	let w = getStyleWidth(elem) || elem.getAttribute("width");
+	let h = getStyleHeight(elem) || elem.getAttribute("height");
+	return {
+		cx: w / 2,
+		cy: h / 2
+	};
+}

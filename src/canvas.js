@@ -1,14 +1,14 @@
+import Snap from "../src/snap";
 import { getStyleWidth, getStyleHeight } from "./util";
 
-let Snap;
 export default class Canvas {
-	constructor(_Snap, selector) {
+	constructor(selector) {
 		if (typeof selector === "string") {
 			selector = document.querySelector(selector);
 		}
 
-		Snap = _Snap;
-		return wrap(selector);
+		this.canvas = wrap(selector);
+		this.Snap = Snap;
 	}
 }
 
