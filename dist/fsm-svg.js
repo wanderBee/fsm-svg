@@ -1,5 +1,5 @@
 /**
- * fsm.svg v0.1.0-alpha.7
+ * fsm.svg v0.1.0-beta.1
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
@@ -11257,7 +11257,7 @@
 			selector = document.querySelector(selector);
 		}
 
-		this._canvas = wrap(selector);
+		this.canvas = wrap(selector);
 		this.Snap = snap_svg;
 	};
 
@@ -11327,6 +11327,7 @@
 		this._pid = this._canvas.id;
 		this.color = options.color || "#ffffff";
 		this.labelText = options.label || "Default";
+		this.theta = options.theta; // The angle between the state's center and the canvas's center
 
 		var ref = Object.assign(
 			{},
@@ -11392,14 +11393,14 @@
 		this.target = target;
 
 		var curv = options.curv; if ( curv === void 0 ) curv = 0;
-		var markerSize = options.markerSize; if ( markerSize === void 0 ) markerSize = 7;
+		var markerSize = options.markerSize; if ( markerSize === void 0 ) markerSize = 4;
 		this.markerSize = markerSize;
 
 		genLinkPath(this, source, target, curv, markerSize);
 	};
 
 	function genLinkPath(link, source, target, curv, markerSize) {
-		link.path = svgPathCurv(source.x, source.y, target.x, target.y, curv);
+		link.path = svgPathCubicCurve(source.x, source.y, target.x, target.y, curv);
 		link.marker = svgTriangleMarker(markerSize);
 	}
 
@@ -11415,16 +11416,20 @@
 		};
 	}
 
-	function svgPathCurv(x1, y1, x2, y2, curv) {
-		/*
-		 * quadratic Bezier curve
+	function svgPathCubicCurve(x1, y1, x2, y2, curv) {
+		/**
+		 * Cubic Bezeir Curve
+		 * curv is between [-2, 2]
 		 */
-		curv = curv >= -1 && curv <= 1 ? curv : 0;
+		curv = curv >= -2 && curv <= 2 ? curv : 0;
 		var cf = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) / 2;
+		var innerCurv = 0.27;
 		var s,
 			k2,
-			controX,
-			controY,
+			controX1,
+			controY1,
+			controX2,
+			controY2,
 			q,
 			l,
 			path = "";
@@ -11433,18 +11438,39 @@
 		k2 = -(x2 - x1) / (y2 - y1);
 
 		if (k2 < 2 && k2 > -2) {
-			controX = (x2 + x1) / 2 + curv * cf;
-			controX = controX < 0 ? -controX : controX;
-			controY = k2 * (controX - (x1 + x2) / 2) + (y1 + y2) / 2;
-			controY = controY < 0 ? -controY : controY;
+			controX1 = x2 * innerCurv + x1 * (1 - innerCurv) + curv * cf;
+			controX1 = controX1 < 0 ? -controX1 : controX1;
+			controY1 =
+				k2 * (controX1 - (x2 * innerCurv + x1 * (1 - innerCurv))) +
+				(y2 * innerCurv + y1 * (1 - innerCurv));
+			controY1 = controY1 < 0 ? -controY1 : controY1;
+
+			controX2 = x1 * innerCurv + x2 * (1 - innerCurv) + curv * cf;
+			controX2 = controX2 < 0 ? -controX2 : controX2;
+			controY2 =
+				k2 * (controX2 - (x1 * innerCurv + x2 * (1 - innerCurv))) +
+				(y1 * innerCurv + y2 * (1 - innerCurv));
+			controY2 = controY2 < 0 ? -controY2 : controY2;
 		} else {
-			controY = (y2 + y1) / 2 + curv * cf;
-			controY = controY < 0 ? -controY : controY;
-			controX = (controY - (y1 + y2) / 2) / k2 + (x1 + x2) / 2;
-			controX = controX < 0 ? -controX : controX;
+			k2 = -(y2 - y1) / (x2 - x1);
+			controY1 = y2 * innerCurv + y1 * (1 - innerCurv) + curv * cf;
+			controY1 = controY1 < 0 ? -controY1 : controY1;
+			controX1 =
+				k2 * (controY1 - (y2 * innerCurv + y1 * (1 - innerCurv))) +
+				x2 * innerCurv +
+				x1 * (1 - innerCurv);
+			controX1 = controX1 < 0 ? -controX1 : controX1;
+
+			controY2 = y1 * innerCurv + y2 * (1 - innerCurv) + curv * cf;
+			controY2 = controY2 < 0 ? -controY2 : controY2;
+			controX2 =
+				k2 * (controY2 - (y1 * innerCurv + y2 * (1 - innerCurv))) +
+				x1 * innerCurv +
+				x2 * (1 - innerCurv);
+			controX2 = controX2 < 0 ? -controX2 : controX2;
 		}
 
-		q = "Q" + controX + "," + controY + " ";
+		q = "C" + controX1 + "," + controY1 + " " + controX2 + "," + controY2 + " ";
 		//l=lineto
 		l = x2 + "," + y2 + " ";
 		//eg: M30,30 Q65,65 100,100
@@ -11504,12 +11530,18 @@
 		};
 
 		Fsm.prototype.scale = function scale (stateIndex, ratio) {
-			console.log(">>>fsm._canvas:", fsm._canvas, linePath);
+			var state = this._states[stateIndex];
+			/**
+			 * while circle scale, link-line should scale as well.
+			 * link-line's changed length = circle.r * Math.abs(ratio - 1) * deviation
+			 */
+			var deviation = 1.215;
+
 			var lineLength = fsm.Snap.path.getTotalLength(linePath);
 			var newLinePath = fsm.Snap.path.getSubpath(
 				linePath,
 				0,
-				lineLength - 15 * deviation
+				lineLength - state.g.circle.r * Math.abs(ratio - 1) * deviation
 			);
 		};
 
@@ -11525,41 +11557,53 @@
 			option.color = getColor(fsm);
 			option.index = parseInt(index);
 			var newState = new State(
-				Object.assign(option, stateOpts, { canvas: fsm._canvas })
+				Object.assign(option, stateOpts, { canvas: fsm.canvas })
 			);
-			fsm._states.push(newState);
-			if (option.linkTo) {
-				fsm._links.push([option.index, option.linkTo]);
+
+			if (Object.prototype.toString.call(option.linkTo) !== "[object Array]") {
+				option.linkTo = [option.linkTo];
 			}
+			forEachValue(option.linkTo, function (lto) {
+				if (lto > -1) {
+					fsm._links.push([option.index, lto]);
+					newState.out = (newState.out || 0) + 1;
+				}
+			});
+			fsm._states.push(newState);
 		});
 	}
 
 	function registerLinks(fsm, links) {
-		var s_index, t_index;
+		var sIndex, tIndex;
 		forEachValue(links, function (linkIndex) {
-			s_index = linkIndex[0];
-			t_index = linkIndex[1];
-			link$1(fsm, fsm._states[s_index], fsm._states[t_index]);
+			sIndex = linkIndex[0];
+			tIndex = linkIndex[1];
+			link$1(fsm, sIndex, tIndex);
 		});
 	}
 
-	function link$1(fsm, state1, state2) {
-		if (!state1 instanceof State || !state2 instanceof State) {
-			return;
-		}
-		var p1 = new Point(state1.g.circle.cx, state1.g.circle.cy);
-		var p2 = new Point(state2.g.circle.cx, state2.g.circle.cy);
-		var link = new Link(p1, p2);
+	/**
+	 *
+	 * @param { Fsm } fsm
+	 * @param { source state's index } sIndex
+	 * @param { target state's index } tIndex
+	 */
+	function link$1(fsm, sIndex, tIndex) {
+		var state1 = fsm._states[sIndex];
+		var state2 = fsm._states[tIndex];
+		var linkPoint = calcLinkPoint(fsm, sIndex, tIndex);
 
+		var p1 = new Point(linkPoint.x1, linkPoint.y1);
+		var p2 = new Point(linkPoint.x2, linkPoint.y2);
+		var link = new Link(p1, p2, { curv: linkPoint.curv });
 		// line gradient
-		var gradi = fsm._canvas.paper.gradient(
-			("L(" + (p1.x) + ", " + (p1.y) + ", " + (p2.x) + ", " + (p2.y) + ")#" + (state1.g.circle.stroke) + "-#" + (state2.g.circle.stroke))
+		var gradi = fsm.canvas.paper.gradient(
+			("L(" + (p1.x) + ", " + (p1.y) + ", " + (p2.x) + ", " + (p2.y) + ")" + (state1.g.circle.stroke) + "-" + (state2.g.circle.stroke))
 		);
 		// line marker-end : triangle
-		var triangleSvg = fsm._canvas.paper.path(link.marker.path).attr({
+		var triangleSvg = fsm.canvas.paper.path(link.marker.path).attr({
 			fill: state2.g.circle.stroke
 		});
-		console.log("gradi:", gradi);
 		var tmarker;
 		{
 			var ref = link.marker;
@@ -11569,10 +11613,10 @@
 			var height = ref.height;
 			var refX = ref.refX;
 			var refY = ref.refY;
-			tmarker = triangleSvg.marker(x, y, width, height, refX - 2, refY);
+			tmarker = triangleSvg.marker(x, y, width, height, refX, refY);
 		}
 		// line bezier
-		var lpSvg = fsm._canvas.paper
+		var lpSvg = fsm.canvas.paper
 			.path(link.path)
 			.attr({
 				stroke: gradi,
@@ -11581,8 +11625,97 @@
 				fill: "none"
 			})
 			.addClass("beziermorph");
-		// fsm._canvas.paper.g().add(lpSvg);
+		// fsm.canvas.paper.g().add(lpSvg);
+		lpSvg.insertBefore(fsm._states[0].g);
 		fsm.links.push(lpSvg);
+	}
+
+	// calc curve
+	function calcLinkPoint(fsm, sIndex, tIndex) {
+		var state1 = fsm._states[sIndex];
+		var state2 = fsm._states[tIndex];
+		var theta1 = state1.theta;
+		var theta2 = state2.theta;
+		var curv1 = -0.6;
+		var curv2 = 0.6;
+		var offsetRad = 18;
+		var inArea = inWhichArea(theta1, theta2);
+
+		// calc curve
+		var calcCurve = 0;
+		if (
+			(inArea == "top" && sIndex < tIndex) ||
+			(inArea == "right" && sIndex > tIndex) ||
+			(inArea == "bottom" && sIndex > tIndex) ||
+			(inArea == "left" && sIndex > tIndex)
+		) {
+			calcCurve = curv1;
+		} else if (
+			(inArea == "top" && sIndex > tIndex) ||
+			(inArea == "right" && sIndex < tIndex) ||
+			(inArea == "bottom" && sIndex < tIndex) ||
+			(inArea == "left" && sIndex < tIndex)
+		) {
+			calcCurve = curv2;
+		} else {
+			calcCurve = 0;
+		}
+
+		// calc link-point
+		var x1, y1, x2, y2, rad1, rad2;
+
+		if (
+			(inArea == "top" && calcCurve > 0) ||
+			(inArea == "right" && calcCurve < 0) ||
+			(inArea == "bottom" && calcCurve < 0) ||
+			(inArea == "left" && calcCurve > 0)
+		) {
+			rad1 = theta1 + 180 + offsetRad;
+			rad2 = theta2 + 180 - offsetRad;
+		} else {
+			rad1 = theta1 + offsetRad;
+			rad2 = theta2 - offsetRad;
+		}
+
+		x1 = state1.g.circle.cx + state1.g.circle.r * Math.cos(fsm.Snap.rad(rad1));
+		y1 =
+			state1.g.circle.cy + state1.g.circle.r * Math.sin(fsm.Snap.rad(rad1)) - 1;
+
+		x2 = state2.g.circle.cx + state2.g.circle.r * Math.cos(fsm.Snap.rad(rad2));
+		y2 =
+			state2.g.circle.cy + state2.g.circle.r * Math.sin(fsm.Snap.rad(rad2)) - 1;
+
+		return {
+			x1: x1,
+			y1: y1,
+			x2: x2,
+			y2: y2,
+			curv: calcCurve
+		};
+	}
+
+	function inWhichArea(theta1, theta2) {
+		return inTopArea(theta1, theta2)
+			? "top"
+			: inRightArea(theta1, theta2)
+			? "right"
+			: inBottomArea(theta1, theta2)
+			? "bottom"
+			: inLeftArea()
+			? "left"
+			: "";
+	}
+	function inTopArea(theta1, theta2) {
+		return theta1 > -180 && theta1 <= 0 && theta2 > -180 && theta2 <= 0;
+	}
+	function inRightArea(theta1, theta2) {
+		return theta1 > -90 && theta1 <= 90 && theta2 > -90 && theta2 <= 90;
+	}
+	function inBottomArea(theta1, theta2) {
+		return theta1 > 0 && theta1 <= 180 && theta2 > 0 && theta2 <= 180;
+	}
+	function inLeftArea(theta1, theta2) {
+		return;
 	}
 
 	function getColor(fsm) {
@@ -11593,7 +11726,7 @@
 	function getTransformOption(fsm, statesCount, stateIndex) {
 		var transformByStartAngle = getTransformFunc(fsm, statesCount, stateIndex);
 		if (statesCount == 0 || statesCount == 1) {
-			return getCenterOfElement(fsm._canvas.node);
+			return getCenterOfElement(fsm.canvas.node);
 		} else if (statesCount == 2) {
 			return transformByStartAngle(-180);
 		} else if (statesCount == 3) {
@@ -11609,14 +11742,15 @@
 		return function(startAngle) {
 			var tranformAngle = 360 / statesCount;
 			var displayCircleR =
-				Math.max(Math.min(fsm._canvas.width, fsm._canvas.height, 320), 40) / 2;
+				Math.max(Math.min(fsm.canvas.width, fsm.canvas.height, 320), 40) / 2;
 
 			var theta = startAngle + tranformAngle * stateIndex;
 			var thetaFPi = (theta / 180) * Math.PI;
-			var ref = getCenterOfElement(fsm._canvas.node);
+			var ref = getCenterOfElement(fsm.canvas.node);
 			var cx = ref.cx;
 			var cy = ref.cy;
 			return {
+				theta: theta,
 				cx: cx + displayCircleR * Math.cos(thetaFPi),
 				cy: cy + displayCircleR * Math.sin(thetaFPi),
 				position: theta > -90 && theta < 90 ? "right" : "left"
