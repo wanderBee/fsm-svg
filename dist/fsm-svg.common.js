@@ -1,5 +1,5 @@
 /**
- * fsm.svg v[A[A[B[B0.1.0-beta.3
+ * fsm.svg v0.1.0
  * (c) 2019 Pengfei Wang
  * @license MIT
  */

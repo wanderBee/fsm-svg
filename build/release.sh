@@ -12,19 +12,19 @@ then
   yarn test 2>/dev/null
 
   # build
-  VERSION=$VERSION yarn build
+  VERSION=$VERSION yarn build && echo
 
   # commit
-  read -p "Enter commit message:" MSG
+  echo "Enter commit message:"
+  read MSG
 
   git add .
   git commit -m "$MSG"
   yarn version --new-version $VERSION
 
   # publish
-  cat .git/HEAD
-  ref: refs/tags/v$VERSION
-  git push origin refs/tags/v$VERSION
+  git tag v$VERSION
+  git push v$VERSION
   git push
   yarn publish
 fi
