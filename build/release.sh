@@ -9,18 +9,20 @@ then
   echo "Releasing $VERSION ..."
 
   # run tests
-  npm test 2>/dev/null
+  yarn test 2>/dev/null
 
   # build
-  VERSION=$VERSION npm run build
+  VERSION=$VERSION yarn build
 
   # commit
+  read -p "Enter commit message:" MSG
+
   git add -A
-  git commit -m "[build] $VERSION"
-  npm version $VERSION --message "[release] $VERSION"
+  git commit -m "$MSG"
+  yarn version $VERSION --message "[release] $VERSION"
 
   # publish
   git push origin refs/tags/v$VERSION
   git push
-  npm publish
+  yarn publish
 fi

@@ -1,6 +1,5 @@
 import fsmsvg from "fsm.svg";
 import anime from "animejs/lib/anime.es.js";
-console.log(">>> fsmsvg:", fsmsvg);
 
 var fsm = fsmsvg({
 	container: "#demo",

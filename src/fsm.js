@@ -18,11 +18,11 @@ export default class Fsm extends Canvas {
 			assert(this instanceof Fsm, `fsm must be called with the new operator.`);
 		}
 
-		const { plugins = [], states = [] } = options;
+		const { plugins = [], states = [], links = [] } = options;
 
 		this._states = [];
 
-		this._links = [];
+		this._links = links;
 
 		// apply plugins
 		plugins.forEach(plugin => plugin(this));
@@ -65,6 +65,7 @@ export default class Fsm extends Canvas {
 
 function registerStates(fsm, states) {
 	const statesCount = states.length;
+	const links = [].concat(fsm._links);
 	forEachValue(states, (stateOpts, index) => {
 		const option = getTransformOption(fsm, statesCount, index);
 		option.color = getColor(fsm);
@@ -73,15 +74,17 @@ function registerStates(fsm, states) {
 			Object.assign(option, stateOpts, { canvas: fsm.canvas })
 		);
 
-		if (Object.prototype.toString.call(option.linkTo) !== "[object Array]") {
-			option.linkTo = [option.linkTo];
-		}
-		forEachValue(option.linkTo, lto => {
-			if (lto > -1) {
-				fsm._links.push([option.index, lto]);
-				newState.out = (newState.out || 0) + 1;
+		if (!links.length) {
+			if (Object.prototype.toString.call(option.linkTo) !== "[object Array]") {
+				option.linkTo = [option.linkTo];
 			}
-		});
+			forEachValue(option.linkTo, lto => {
+				if (lto > -1) {
+					fsm._links.push([option.index, lto]);
+					newState.out = (newState.out || 0) + 1;
+				}
+			});
+		}
 		fsm._states.push(newState);
 	});
 }

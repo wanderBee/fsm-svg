@@ -1,5 +1,5 @@
 /**
- * fsm.svg v0.1.0-beta.1
+ * fsm.svg v0.1.0-beta.3
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
@@ -11496,10 +11496,11 @@
 
 			var plugins = options.plugins; if ( plugins === void 0 ) plugins = [];
 			var states = options.states; if ( states === void 0 ) states = [];
+			var links = options.links; if ( links === void 0 ) links = [];
 
 			this._states = [];
 
-			this._links = [];
+			this._links = links;
 
 			// apply plugins
 			plugins.forEach(function (plugin) { return plugin(this$1); });
@@ -11552,6 +11553,7 @@
 
 	function registerStates(fsm, states) {
 		var statesCount = states.length;
+		var links = [].concat(fsm._links);
 		forEachValue(states, function (stateOpts, index) {
 			var option = getTransformOption(fsm, statesCount, index);
 			option.color = getColor(fsm);
@@ -11560,15 +11562,17 @@
 				Object.assign(option, stateOpts, { canvas: fsm.canvas })
 			);
 
-			if (Object.prototype.toString.call(option.linkTo) !== "[object Array]") {
-				option.linkTo = [option.linkTo];
-			}
-			forEachValue(option.linkTo, function (lto) {
-				if (lto > -1) {
-					fsm._links.push([option.index, lto]);
-					newState.out = (newState.out || 0) + 1;
+			if (!links.length) {
+				if (Object.prototype.toString.call(option.linkTo) !== "[object Array]") {
+					option.linkTo = [option.linkTo];
 				}
-			});
+				forEachValue(option.linkTo, function (lto) {
+					if (lto > -1) {
+						fsm._links.push([option.index, lto]);
+						newState.out = (newState.out || 0) + 1;
+					}
+				});
+			}
 			fsm._states.push(newState);
 		});
 	}
