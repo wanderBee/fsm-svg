@@ -36,10 +36,6 @@ import FsmSvg from "fsm.svg";
 
 ## usage
 
-> dependencies
-
-[snap.svg](http://snapsvg.io)
-
 > in your file
 
 ```javascript
