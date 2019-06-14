@@ -19,7 +19,7 @@ then
 
   git add -A
   git commit -m "$MSG"
-  yarn version $VERSION --message "[release] $VERSION"
+  yarn version --new-version $VERSION --message "[release] $VERSION"
 
   # publish
   git push origin refs/tags/v$VERSION
