@@ -43,25 +43,26 @@ import FsmSvg from "fsm.svg";
 > in your file
 
 ```javascript
-var svg = FlowchartSvg.init("#flow");
+var svg = FsmSvg.init("#flow");
 svg.setOption({
-	// type: 'polar', // 默认值'polar'
-	r: 22, // polar图的圆半径
-	data: [
+	states: [
 		{
-			source: "开始",
-			target: "中间",
-			value: "a>5"
+			label: "Normal",
+			color: "#8FBC8F"
 		},
 		{
-			source: "中间",
-			target: "结束",
-			value: "b>0"
+			label: "Warning",
+			color: "#EC0000"
+		},
+		{
+			label: "Problematic",
+			color: "#A64EA6"
+		},
+		{
+			label: "Exit"
 		}
 	],
-	style: {
-		color: "#6c89d5"
-	}
+	links: [[0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]
 });
 ```
 
