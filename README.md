@@ -1,23 +1,12 @@
-# flowchart.svg
+# fsm.svg
 
+[![Gitter](https://badges.gitter.im/fsm-svg/fsm.svg)](https://gitter.im/fsm-svg/fsm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![NPM Version](https://img.shields.io/npm/v/fsm.svg.svg)](https://www.npmjs.com/package/fsm.svg)
 
-[![NPM Badge](https://nodei.co/npm/fsm.svg.png?downloads=true)](https://www.npmjs.com/package/fsm.svg)
+## Installation
 
-## Install
-
-```bash
-$ git clone https://github.com/wanderBee/fsm.svg
 ```
-
-```bash
-$ yarn
-```
-
-## build
-
-```bash
-$ yarn build
+$ npm install fsm.svg
 ```
 
 ## Load
@@ -34,7 +23,7 @@ $ yarn build
 import FsmSvg from "fsm.svg";
 ```
 
-## usage
+## Usage
 
 > in your file
 

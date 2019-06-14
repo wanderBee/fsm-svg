@@ -26,10 +26,7 @@ export default class Fsm {
 	}
 
 	setOption(options = {}) {
-		assert(
-			typeof this.canvas !== "undefined",
-			`fsm.init must be called first.`
-		);
+		assert(__initialized, `fsm.init must be called first.`);
 
 		if (process.env.NODE_ENV !== "production") {
 			assert(this instanceof Fsm, `fsm must be called with the new operator.`);
@@ -49,6 +46,12 @@ export default class Fsm {
 		registerStates(this, states);
 
 		registerLinks(this, this._links);
+	}
+
+	scale(index, ratio) {
+		assert(__initialized, `fsm.init must be called first.`);
+
+		let state = this._states[index];
 	}
 }
 

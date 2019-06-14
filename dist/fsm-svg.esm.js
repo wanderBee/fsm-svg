@@ -1,5 +1,5 @@
 /**
- * fsm.svg v0.2.1
+ * fsm.svg v0.2.2
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
@@ -11495,10 +11495,7 @@ Fsm.prototype.setOption = function setOption (options) {
 		var this$1 = this;
 		if ( options === void 0 ) options = {};
 
-	assert(
-		typeof this.canvas !== "undefined",
-		"fsm.init must be called first."
-	);
+	assert(__initialized, "fsm.init must be called first.");
 
 	if (process.env.NODE_ENV !== "production") {
 		assert(this instanceof Fsm, "fsm must be called with the new operator.");
@@ -11520,6 +11517,12 @@ Fsm.prototype.setOption = function setOption (options) {
 	registerStates(this, states);
 
 	registerLinks(this, this._links);
+};
+
+Fsm.prototype.scale = function scale (index, ratio) {
+	assert(__initialized, "fsm.init must be called first.");
+
+	var state = this._states[index];
 };
 
 function registerStates(fsm, states) {
