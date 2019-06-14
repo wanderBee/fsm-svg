@@ -17,11 +17,13 @@ then
   # commit
   read -p "Enter commit message:" MSG
 
-  git add -A
+  git add .
   git commit -m "$MSG"
-  yarn version --new-version $VERSION --message "[release] $VERSION"
+  yarn version --new-version $VERSION
 
   # publish
+  cat .git/HEAD
+  ref: refs/tags/v$VERSION
   git push origin refs/tags/v$VERSION
   git push
   yarn publish
