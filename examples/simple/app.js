@@ -1,8 +1,8 @@
-import fsmsvg from "fsm.svg";
+import FsmSvg from "fsm.svg";
 import anime from "animejs/lib/anime.es.js";
 
-var fsm = fsmsvg({
-	container: "#demo",
+var fsm = FsmSvg.init("#demo");
+fsm.setOption({
 	states: [
 		{
 			label: "Normal",

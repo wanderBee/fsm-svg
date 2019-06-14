@@ -12,7 +12,7 @@ then
   yarn test 2>/dev/null
 
   # build
-  VERSION=$VERSION yarn build && echo
+  VERSION=$VERSION yarn build && echo "Git publish $VERSION ..."
 
   # commit
   echo "Enter commit message:"
@@ -26,5 +26,5 @@ then
   git tag v$VERSION
   git push v$VERSION
   git push
-  yarn publish
+  yarn publish --new-version $VERSION
 fi

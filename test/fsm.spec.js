@@ -4,7 +4,7 @@
 */
 "use strict";
 
-import Fsm from "../src/fsm";
+import FsmSvg from "../src/fsm";
 
 describe("Link", () => {
 	var fsm;
@@ -13,7 +13,9 @@ describe("Link", () => {
 		document.body.innerHTML = `
         <svg id='demo' width='400' height='400'></svg>
 		`;
-		fsm = new Fsm({
+
+		fsm = FsmSvg.init("#demo");
+		fsm.setOption({
 			container: "#demo",
 			states: [
 				{

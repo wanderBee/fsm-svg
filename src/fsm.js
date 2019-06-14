@@ -10,9 +10,26 @@ import State from "./state";
 import Point from "./point";
 import Link from "./link";
 
-export default class Fsm extends Canvas {
-	constructor(options = {}) {
-		super(options.container);
+let __initialized = false;
+export default class Fsm {
+	constructor(canvas) {
+		assert(__initialized, "please call Fsm.init instead of new operator.");
+
+		this.canvas = canvas;
+	}
+
+	static init(selector) {
+		let ___c__ = new Canvas(selector);
+
+		__initialized = true;
+		return new Fsm(___c__.canvas);
+	}
+
+	setOption(options = {}) {
+		assert(
+			typeof this.canvas !== "undefined",
+			`fsm.init must be called first.`
+		);
 
 		if (process.env.NODE_ENV !== "production") {
 			assert(this instanceof Fsm, `fsm must be called with the new operator.`);
@@ -22,7 +39,9 @@ export default class Fsm extends Canvas {
 
 		this._states = [];
 
-		this._links = links;
+		this._links = links; // Array of [source-state-index, target-state-index]
+
+		this.links = []; // SnapSvgElement: store link
 
 		// apply plugins
 		plugins.forEach(plugin => plugin(this));
@@ -30,36 +49,6 @@ export default class Fsm extends Canvas {
 		registerStates(this, states);
 
 		registerLinks(this, this._links);
-	}
-
-	get states() {
-		return this._states;
-	}
-
-	set states(v) {
-		if (process.env.NODE_ENV !== "production") {
-			assert(false, `use fsm.replaceState() to explicit replace state.`);
-		}
-	}
-
-	get links() {
-		return this._links;
-	}
-
-	scale(stateIndex, ratio) {
-		const state = this._states[stateIndex];
-		/**
-		 * while circle scale, link-line should scale as well.
-		 * link-line's changed length = circle.r * Math.abs(ratio - 1) * deviation
-		 */
-		const deviation = 1.215;
-
-		var lineLength = fsm.Snap.path.getTotalLength(linePath);
-		var newLinePath = fsm.Snap.path.getSubpath(
-			linePath,
-			0,
-			lineLength - state.g.circle.r * Math.abs(ratio - 1) * deviation
-		);
 	}
 }
 
@@ -189,13 +178,19 @@ function calcLinkPoint(fsm, sIndex, tIndex) {
 		rad2 = theta2 - offsetRad;
 	}
 
-	x1 = state1.g.circle.cx + state1.g.circle.r * Math.cos(fsm.Snap.rad(rad1));
+	x1 =
+		state1.g.circle.cx + state1.g.circle.r * Math.cos((rad1 / 180) * Math.PI);
 	y1 =
-		state1.g.circle.cy + state1.g.circle.r * Math.sin(fsm.Snap.rad(rad1)) - 1;
+		state1.g.circle.cy +
+		state1.g.circle.r * Math.sin((rad1 / 180) * Math.PI) -
+		1;
 
-	x2 = state2.g.circle.cx + state2.g.circle.r * Math.cos(fsm.Snap.rad(rad2));
+	x2 =
+		state2.g.circle.cx + state2.g.circle.r * Math.cos((rad2 / 180) * Math.PI);
 	y2 =
-		state2.g.circle.cy + state2.g.circle.r * Math.sin(fsm.Snap.rad(rad2)) - 1;
+		state2.g.circle.cy +
+		state2.g.circle.r * Math.sin((rad2 / 180) * Math.PI) -
+		1;
 
 	return {
 		x1,

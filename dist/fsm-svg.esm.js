@@ -1,5 +1,5 @@
 /**
- * fsm.svg v0.1.0
+ * fsm.svg v0.2.0
  * (c) 2019 Pengfei Wang
  * @license MIT
  */
@@ -11222,7 +11222,7 @@ function forEachValue(obj, fn) {
 }
 
 function assert(condition, msg) {
-	if (!condition) { throw new Error(("[vuex] " + msg)); }
+	if (!condition) { throw new Error(("[fsm.svg] " + msg)); }
 }
 
 function getStyles(dom) {
@@ -11477,73 +11477,50 @@ function svgPathCubicCurve(x1, y1, x2, y2, curv) {
 	Author pengfei.wang
 */
 
-var Fsm = /*@__PURE__*/(function (Canvas) {
-	function Fsm(options) {
+var __initialized = false;
+var Fsm = function Fsm(canvas) {
+	assert(__initialized, "please call Fsm.init instead of new operator.");
+
+	this.canvas = canvas;
+};
+
+Fsm.init = function init (selector) {
+	var ___c__ = new Canvas(selector);
+
+	__initialized = true;
+	return new Fsm(___c__.canvas);
+};
+
+Fsm.prototype.setOption = function setOption (options) {
 		var this$1 = this;
 		if ( options === void 0 ) options = {};
 
-		Canvas.call(this, options.container);
+	assert(
+		typeof this.canvas !== "undefined",
+		"fsm.init must be called first."
+	);
 
-		if (process.env.NODE_ENV !== "production") {
-			assert(this instanceof Fsm, "fsm must be called with the new operator.");
-		}
+	if (process.env.NODE_ENV !== "production") {
+		assert(this instanceof Fsm, "fsm must be called with the new operator.");
+	}
 
-		var plugins = options.plugins; if ( plugins === void 0 ) plugins = [];
+	var plugins = options.plugins; if ( plugins === void 0 ) plugins = [];
 		var states = options.states; if ( states === void 0 ) states = [];
 		var links = options.links; if ( links === void 0 ) links = [];
 
-		this._states = [];
+	this._states = [];
 
-		this._links = links;
+	this._links = links; // Array of [source-state-index, target-state-index]
 
-		// apply plugins
-		plugins.forEach(function (plugin) { return plugin(this$1); });
+	this.links = []; // SnapSvgElement: store link
 
-		registerStates(this, states);
+	// apply plugins
+	plugins.forEach(function (plugin) { return plugin(this$1); });
 
-		registerLinks(this, this._links);
-	}
+	registerStates(this, states);
 
-	if ( Canvas ) Fsm.__proto__ = Canvas;
-	Fsm.prototype = Object.create( Canvas && Canvas.prototype );
-	Fsm.prototype.constructor = Fsm;
-
-	var prototypeAccessors = { states: { configurable: true },links: { configurable: true } };
-
-	prototypeAccessors.states.get = function () {
-		return this._states;
-	};
-
-	prototypeAccessors.states.set = function (v) {
-		if (process.env.NODE_ENV !== "production") {
-			assert(false, "use fsm.replaceState() to explicit replace state.");
-		}
-	};
-
-	prototypeAccessors.links.get = function () {
-		return this._links;
-	};
-
-	Fsm.prototype.scale = function scale (stateIndex, ratio) {
-		var state = this._states[stateIndex];
-		/**
-		 * while circle scale, link-line should scale as well.
-		 * link-line's changed length = circle.r * Math.abs(ratio - 1) * deviation
-		 */
-		var deviation = 1.215;
-
-		var lineLength = fsm.Snap.path.getTotalLength(linePath);
-		var newLinePath = fsm.Snap.path.getSubpath(
-			linePath,
-			0,
-			lineLength - state.g.circle.r * Math.abs(ratio - 1) * deviation
-		);
-	};
-
-	Object.defineProperties( Fsm.prototype, prototypeAccessors );
-
-	return Fsm;
-}(Canvas));
+	registerLinks(this, this._links);
+};
 
 function registerStates(fsm, states) {
 	var statesCount = states.length;
@@ -11675,13 +11652,19 @@ function calcLinkPoint(fsm, sIndex, tIndex) {
 		rad2 = theta2 - offsetRad;
 	}
 
-	x1 = state1.g.circle.cx + state1.g.circle.r * Math.cos(fsm.Snap.rad(rad1));
+	x1 =
+		state1.g.circle.cx + state1.g.circle.r * Math.cos((rad1 / 180) * Math.PI);
 	y1 =
-		state1.g.circle.cy + state1.g.circle.r * Math.sin(fsm.Snap.rad(rad1)) - 1;
+		state1.g.circle.cy +
+		state1.g.circle.r * Math.sin((rad1 / 180) * Math.PI) -
+		1;
 
-	x2 = state2.g.circle.cx + state2.g.circle.r * Math.cos(fsm.Snap.rad(rad2));
+	x2 =
+		state2.g.circle.cx + state2.g.circle.r * Math.cos((rad2 / 180) * Math.PI);
 	y2 =
-		state2.g.circle.cy + state2.g.circle.r * Math.sin(fsm.Snap.rad(rad2)) - 1;
+		state2.g.circle.cy +
+		state2.g.circle.r * Math.sin((rad2 / 180) * Math.PI) -
+		1;
 
 	return {
 		x1: x1,
@@ -11761,8 +11744,4 @@ function getTransformFunc(fsm, statesCount, stateIndex) {
 	Author pengfei.wang
 */
 
-function index_esm(options) {
-	return new Fsm(options);
-}
-
-export default index_esm;
+export default Fsm;

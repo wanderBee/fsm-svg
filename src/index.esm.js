@@ -7,6 +7,4 @@
 import Snap from "./snap";
 import Fsm from "./fsm";
 
-export default function(options) {
-	return new Fsm(options);
-}
+export default Fsm;
