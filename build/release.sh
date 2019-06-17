@@ -9,10 +9,10 @@ then
   echo "Releasing $VERSION ..."
 
   # run tests
-  yarn test 2>/dev/null
+  npm test 2>/dev/null
 
   # build
-  VERSION=$VERSION yarn build && echo "Git publish $VERSION ..."
+  VERSION=$VERSION npm build && echo "Git publish $VERSION ..."
 
   # commit
   echo "Enter commit message:"
@@ -20,10 +20,10 @@ then
 
   git add .
   git commit -m "$MSG"
-  yarn version --new-version $VERSION
+  npm version $VERSION
 
   # publish
   git push -u origin v$VERSION
   git push
-  yarn publish --new-version $VERSION
+  npm publish
 fi
