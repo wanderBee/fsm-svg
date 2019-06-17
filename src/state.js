@@ -24,6 +24,10 @@ export default class State {
 			getCenterOfElement(this._canvas.node),
 			options
 		);
+		this.cx = cx;
+		this.cy = cy;
+		this.circleR = circleR;
+		this.position = position;
 
 		// a circle to mark a state
 		this.renderCircle(cx, cy, circleR);
@@ -58,6 +62,7 @@ export default class State {
 
 		label = this._canvas.paper.label(x, y, option);
 		label.text = this.labelText;
+		label.position = pos;
 		this.g.add(label);
 		this.g.label = label;
 	}

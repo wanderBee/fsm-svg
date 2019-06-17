@@ -1,23 +1,31 @@
 import FsmSvg from "fsm.svg";
-import anime from "animejs/lib/anime.es.js";
+import { ellipse2path } from "../../src/util";
+import { filter, forEach } from "lodash";
 
 var fsm = FsmSvg.init("#demo");
 fsm.setOption({
 	states: [
 		{
-			label: "Normal",
-			linkTo: [1, 2]
+			label: "Normal"
 		},
 		{
-			label: "Warning",
-			linkTo: [0, 2]
+			label: "Warning"
 		},
 		{
-			label: "Problematic",
-			linkTo: [1, 0]
+			label: "Problematic"
 		},
 		{
 			label: "Exit"
 		}
-	]
+	],
+	links: [[0, 1], [0, 2], [1, 0], [1, 0], [1, 2], [2, 0], [2, 1]]
 });
+
+var animeIndex = 1;
+var duration = 1600; // default anime duration
+
+fsm.scale(animeIndex, 1.4);
+setTimeout(() => {
+	// restore
+	fsm.scale(animeIndex, 1);
+}, duration);

@@ -8,8 +8,8 @@ export default class Link {
 	 */
 	constructor(source, target, options = {}) {
 		if (process.env.NODE_ENV !== "production") {
-			assert(source instanceof Point, `argument[0] should be a point.`);
-			assert(target instanceof Point, `argument[1] should be a point.`);
+			assert(source instanceof Point, `arguments[0] should be a point.`);
+			assert(target instanceof Point, `arguments[1] should be a point.`);
 		}
 
 		this.source = source;
@@ -25,6 +25,12 @@ export default class Link {
 function genLinkPath(link, source, target, curv, markerSize) {
 	link.path = svgPathCubicCurve(source.x, source.y, target.x, target.y, curv);
 	link.marker = svgTriangleMarker(markerSize);
+	link.bbox = {
+		x1: source.x,
+		y1: source.y,
+		x2: target.x,
+		y2: target.y
+	};
 }
 
 function svgTriangleMarker(size) {
@@ -46,7 +52,7 @@ function svgPathCubicCurve(x1, y1, x2, y2, curv) {
 	 */
 	curv = curv >= -2 && curv <= 2 ? curv : 0;
 	let cf = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) / 2;
-	let innerCurv = 0.27;
+	let innerCurv = 0.333;
 	let s,
 		k2,
 		controX1,
@@ -59,16 +65,19 @@ function svgPathCubicCurve(x1, y1, x2, y2, curv) {
 	s = "M" + x1 + "," + y1 + " ";
 
 	k2 = -(x2 - x1) / (y2 - y1);
-
+	let curvF = curv * cf,
+		curvRad = Math.atan(1 / Math.abs(k2));
 	if (k2 < 2 && k2 > -2) {
-		controX1 = x2 * innerCurv + x1 * (1 - innerCurv) + curv * cf;
+		controX1 =
+			x2 * innerCurv + x1 * (1 - innerCurv) + curvF * Math.sin(curvRad);
 		controX1 = controX1 < 0 ? -controX1 : controX1;
 		controY1 =
 			k2 * (controX1 - (x2 * innerCurv + x1 * (1 - innerCurv))) +
 			(y2 * innerCurv + y1 * (1 - innerCurv));
 		controY1 = controY1 < 0 ? -controY1 : controY1;
 
-		controX2 = x1 * innerCurv + x2 * (1 - innerCurv) + curv * cf;
+		controX2 =
+			x1 * innerCurv + x2 * (1 - innerCurv) + curvF * Math.sin(curvRad);
 		controX2 = controX2 < 0 ? -controX2 : controX2;
 		controY2 =
 			k2 * (controX2 - (x1 * innerCurv + x2 * (1 - innerCurv))) +
@@ -76,7 +85,8 @@ function svgPathCubicCurve(x1, y1, x2, y2, curv) {
 		controY2 = controY2 < 0 ? -controY2 : controY2;
 	} else {
 		k2 = -(y2 - y1) / (x2 - x1);
-		controY1 = y2 * innerCurv + y1 * (1 - innerCurv) + curv * cf;
+		controY1 =
+			y2 * innerCurv + y1 * (1 - innerCurv) + curvF * Math.cos(curvRad);
 		controY1 = controY1 < 0 ? -controY1 : controY1;
 		controX1 =
 			k2 * (controY1 - (y2 * innerCurv + y1 * (1 - innerCurv))) +
@@ -84,7 +94,8 @@ function svgPathCubicCurve(x1, y1, x2, y2, curv) {
 			x1 * (1 - innerCurv);
 		controX1 = controX1 < 0 ? -controX1 : controX1;
 
-		controY2 = y1 * innerCurv + y2 * (1 - innerCurv) + curv * cf;
+		controY2 =
+			y1 * innerCurv + y2 * (1 - innerCurv) + curvF * Math.cos(curvRad);
 		controY2 = controY2 < 0 ? -controY2 : controY2;
 		controX2 =
 			k2 * (controY2 - (y1 * innerCurv + y2 * (1 - innerCurv))) +
@@ -118,14 +129,15 @@ function svgPathCurv(x1, y1, x2, y2, curv) {
 	s = "M" + x1 + "," + y1 + " ";
 
 	k2 = -(x2 - x1) / (y2 - y1);
-
+	let curvF = curv * cf,
+		curvRad = Math.atan(1 / Math.abs(k2));
 	if (k2 < 2 && k2 > -2) {
-		controX = (x2 + x1) / 2 + curv * cf;
+		controX = (x2 + x1) / 2 + curvF * Math.sin(curvRad);
 		controX = controX < 0 ? -controX : controX;
 		controY = k2 * (controX - (x1 + x2) / 2) + (y1 + y2) / 2;
 		controY = controY < 0 ? -controY : controY;
 	} else {
-		controY = (y2 + y1) / 2 + curv * cf;
+		controY = (y2 + y1) / 2 + curvF * Math.cos(curvRad);
 		controY = controY < 0 ? -controY : controY;
 		controX = (controY - (y1 + y2) / 2) / k2 + (x1 + x2) / 2;
 		controX = controX < 0 ? -controX : controX;

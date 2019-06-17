@@ -4,13 +4,18 @@
 */
 "use strict";
 
-import { assert, forEachValue, getCenterOfElement } from "./util";
+import { assert, forEachValue, getCenterOfElement, ellipse2path } from "./util";
+import Snap from "./snap";
 import Canvas from "./canvas";
+import anime from "animejs";
 import State from "./state";
 import Point from "./point";
 import Link from "./link";
 
 let __initialized = false;
+const ANIME_DURATION = 1600;
+const ANIME_EASING_BEZIER = "cubicBezier(.5, .05, .1, .3)";
+
 export default class Fsm {
 	constructor(canvas) {
 		assert(__initialized, "please call Fsm.init instead of new operator.");
@@ -48,11 +53,70 @@ export default class Fsm {
 		registerLinks(this, this._links);
 	}
 
-	scale(index, ratio) {
+	resetState(index, options = {}) {
 		assert(__initialized, `fsm.init must be called first.`);
 
-		let state = this._states[index];
+		let oldState = this._states[index];
+		let { circleR } = Object.assign({}, oldState, options);
+
+		if (circleR != oldState.circleR) {
+			animeCircleR(oldState.g.circle.node, circleR);
+			animeTranslateX(
+				oldState.g.label.node,
+				oldState.position === "right"
+					? circleR - oldState.g.circle.r
+					: oldState.g.circle.r - circleR
+			);
+			oldState.circleR = circleR;
+			this._states[index] = oldState;
+		}
+
+		// repaint links
+		let tLinks = this.links.filter(link => {
+			return link.t === index || link.s === index;
+		});
+		forEachValue(tLinks, tlink => {
+			const tPath = tlink.path;
+			const linkPoint = calcLinkPoint(this, tlink.s, tlink.t);
+			const p1 = new Point(linkPoint.x1, linkPoint.y1);
+			const p2 = new Point(linkPoint.x2, linkPoint.y2);
+			const link = new Link(p1, p2, { curv: linkPoint.curv });
+
+			let nlinkPath = link.path;
+			animePath(tlink.snap.node, nlinkPath);
+		});
 	}
+
+	scale(index, ratio) {
+		this.resetState(index, {
+			circleR: this._states[index].g.circle.r * (ratio < 0 ? 1 : ratio)
+		});
+	}
+}
+
+function animeCircleR(node, newR) {
+	anime({
+		targets: node,
+		r: newR,
+		easing: ANIME_EASING_BEZIER,
+		duration: ANIME_DURATION
+	});
+}
+function animeTranslateX(node, offsetX) {
+	anime({
+		targets: node,
+		translateX: offsetX,
+		easing: ANIME_EASING_BEZIER,
+		duration: ANIME_DURATION
+	});
+}
+function animePath(node, newPath) {
+	anime({
+		targets: node,
+		d: newPath,
+		easing: ANIME_EASING_BEZIER,
+		duration: ANIME_DURATION
+	});
 }
 
 function registerStates(fsm, states) {
@@ -92,27 +156,31 @@ function registerLinks(fsm, links) {
 
 /**
  *
- * @param { Fsm } fsm
+ * @param { Fsm } FSM intance
  * @param { source state's index } sIndex
  * @param { target state's index } tIndex
  */
 function link(fsm, sIndex, tIndex) {
-	const state1 = fsm._states[sIndex];
-	const state2 = fsm._states[tIndex];
+	const stateS = fsm._states[sIndex];
+	const stateT = fsm._states[tIndex];
+	if (!stateS || !stateT) {
+		return;
+	}
 	const linkPoint = calcLinkPoint(fsm, sIndex, tIndex);
 
 	const p1 = new Point(linkPoint.x1, linkPoint.y1);
 	const p2 = new Point(linkPoint.x2, linkPoint.y2);
 	const link = new Link(p1, p2, { curv: linkPoint.curv });
+
 	// line gradient
 	const gradi = fsm.canvas.paper.gradient(
-		`L(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y})${state1.g.circle.stroke}-${
-			state2.g.circle.stroke
+		`L(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y})${stateS.g.circle.stroke}-${
+			stateT.g.circle.stroke
 		}`
 	);
 	// line marker-end : triangle
 	const triangleSvg = fsm.canvas.paper.path(link.marker.path).attr({
-		fill: state2.g.circle.stroke
+		fill: stateT.g.circle.stroke
 	});
 	let tmarker;
 	{
@@ -131,23 +199,34 @@ function link(fsm, sIndex, tIndex) {
 		.addClass("beziermorph");
 	// fsm.canvas.paper.g().add(lpSvg);
 	lpSvg.insertBefore(fsm._states[0].g);
-	fsm.links.push(lpSvg);
+	fsm.links.push({
+		snap: lpSvg,
+		path: link.path,
+		curv: linkPoint.curv,
+		s: sIndex,
+		t: tIndex,
+		bbox: link.bbox
+	});
 }
 
 // calc curve
 function calcLinkPoint(fsm, sIndex, tIndex) {
-	const state1 = fsm._states[sIndex];
-	const state2 = fsm._states[tIndex];
-	const theta1 = state1.theta;
-	const theta2 = state2.theta;
-	const curv1 = -0.6;
-	const curv2 = 0.6;
+	const stateS = fsm._states[sIndex];
+	const stateT = fsm._states[tIndex];
+	const theta1 = stateS.theta;
+	const theta2 = stateT.theta;
+	const tranformAngle = 360 / fsm._states.length;
+	const curvQuot = tranformAngle / 90;
+	const curv1 = -0.58 * curvQuot;
+	const curv2 = 0.58 * curvQuot;
 	const offsetRad = 18;
 	const inArea = inWhichArea(theta1, theta2);
 
 	// calc curve
 	let calcCurve = 0;
-	if (
+	if (Math.abs(tIndex - sIndex) > 1) {
+		calcCurve = 0;
+	} else if (
 		(inArea == "top" && sIndex < tIndex) ||
 		(inArea == "right" && sIndex > tIndex) ||
 		(inArea == "bottom" && sIndex > tIndex) ||
@@ -161,14 +240,15 @@ function calcLinkPoint(fsm, sIndex, tIndex) {
 		(inArea == "left" && sIndex < tIndex)
 	) {
 		calcCurve = curv2;
-	} else {
-		calcCurve = 0;
 	}
 
 	// calc link-point
 	let x1, y1, x2, y2, rad1, rad2;
 
-	if (
+	if (calcCurve == 0) {
+		rad1 = theta1 + 180 + offsetRad;
+		rad2 = theta2 + 180 - offsetRad;
+	} else if (
 		(inArea == "top" && calcCurve > 0) ||
 		(inArea == "right" && calcCurve < 0) ||
 		(inArea == "bottom" && calcCurve < 0) ||
@@ -181,19 +261,13 @@ function calcLinkPoint(fsm, sIndex, tIndex) {
 		rad2 = theta2 - offsetRad;
 	}
 
-	x1 =
-		state1.g.circle.cx + state1.g.circle.r * Math.cos((rad1 / 180) * Math.PI);
+	x1 = stateS.g.circle.cx + stateS.circleR * Math.cos((rad1 / 180) * Math.PI);
 	y1 =
-		state1.g.circle.cy +
-		state1.g.circle.r * Math.sin((rad1 / 180) * Math.PI) -
-		1;
+		stateS.g.circle.cy + stateS.circleR * Math.sin((rad1 / 180) * Math.PI) - 1;
 
-	x2 =
-		state2.g.circle.cx + state2.g.circle.r * Math.cos((rad2 / 180) * Math.PI);
+	x2 = stateT.g.circle.cx + stateT.circleR * Math.cos((rad2 / 180) * Math.PI);
 	y2 =
-		state2.g.circle.cy +
-		state2.g.circle.r * Math.sin((rad2 / 180) * Math.PI) -
-		1;
+		stateT.g.circle.cy + stateT.circleR * Math.sin((rad2 / 180) * Math.PI) - 1;
 
 	return {
 		x1,
@@ -205,10 +279,10 @@ function calcLinkPoint(fsm, sIndex, tIndex) {
 }
 
 function inWhichArea(theta1, theta2) {
-	return inTopArea(theta1, theta2)
-		? "top"
-		: inRightArea(theta1, theta2)
+	return inRightArea(theta1, theta2)
 		? "right"
+		: inTopArea(theta1, theta2)
+		? "top"
 		: inBottomArea(theta1, theta2)
 		? "bottom"
 		: inLeftArea(theta1, theta2)
@@ -216,18 +290,18 @@ function inWhichArea(theta1, theta2) {
 		: "";
 }
 function inTopArea(theta1, theta2) {
-	return theta1 > -180 && theta1 <= 0 && theta2 > -180 && theta2 <= 0;
+	return theta1 >= -180 && theta1 <= 0 && theta2 >= -180 && theta2 <= 0;
 }
 function inRightArea(theta1, theta2) {
-	return theta1 > -90 && theta1 <= 90 && theta2 > -90 && theta2 <= 90;
+	return theta1 >= -90 && theta1 <= 90 && theta2 >= -90 && theta2 <= 90;
 }
 function inBottomArea(theta1, theta2) {
-	return theta1 > 0 && theta1 <= 180 && theta2 > 0 && theta2 <= 180;
+	return theta1 >= 0 && theta1 <= 180 && theta2 >= 0 && theta2 <= 180;
 }
 function inLeftArea(theta1, theta2) {
 	return;
-	((theta1 > -180 && theta1 <= 90) || (theta1 > 90 && theta1 <= 180)) &&
-		((theta2 > -180 && theta2 <= 90) || (theta2 > 90 && theta2 <= 180));
+	((theta1 >= -180 && theta1 <= 90) || (theta1 >= 90 && theta1 <= 180)) &&
+		((theta2 >= -180 && theta2 <= 90) || (theta2 >= 90 && theta2 <= 180));
 }
 
 function getColor(fsm) {

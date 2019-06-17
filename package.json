@@ -1,6 +1,6 @@
 {
 	"name": "fsm.svg",
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"description": "svg for state machine.",
 	"main": "dist/fsm-svg.common.js",
 	"module": "dist/fsm-svg.esm.js",

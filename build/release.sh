@@ -23,7 +23,6 @@ then
   yarn version --new-version $VERSION
 
   # publish
-  git tag v$VERSION
   git push -u origin v$VERSION
   git push
   yarn publish --new-version $VERSION
