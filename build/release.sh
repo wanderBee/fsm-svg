@@ -23,6 +23,7 @@ then
   npm version $VERSION
 
   # publish
+  git tag v$VERSION
   git push -u origin v$VERSION
   git push
   npm publish
