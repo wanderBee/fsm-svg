@@ -18,9 +18,9 @@ then
   echo "Enter commit message:"
   read MSG
 
+  npm version $VERSION
   git add .
   git commit -m "$MSG"
-  npm version $VERSION
 
   # publish
   git tag v$VERSION
