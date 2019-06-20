@@ -21,6 +21,7 @@ fsm.setOption({
 	links: [[0, 1], [0, 2], [1, 0], [1, 0], [1, 2], [2, 0], [2, 1]]
 });
 
+// animation
 var animeIndex = 1;
 var duration = 1600; // default anime duration
 

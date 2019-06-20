@@ -49,6 +49,13 @@ svg.setOption({
 	],
 	links: [[0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]
 });
+
+// scale states[1]:Warning
+svg.scale(1, 1.4);
+// restore
+setTimeout(() => {
+	fsm.scale(1, 1);
+}, 1600);
 ```
 
 ## License

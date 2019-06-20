@@ -36,8 +36,7 @@ module.exports = {
 	resolve: {
 		alias: {
 			"fsm.svg": path.resolve(__dirname, "../src/index.esm.js"),
-			snapsvg: "snapsvg/dist/snap.svg.js",
-			animejs: "animejs/lib/anime.esm.js"
+			snapsvg: "snapsvg/dist/snap.svg.js"
 		}
 	},
 
