@@ -19,7 +19,7 @@ export default class State {
 		this.labelText = options.label || "Default";
 		this.theta = options.theta; // The angle between the state's center and the canvas's center
 
-		let { cx, cy, circleR = 25, position = "left" } = Object.assign(
+		let { cx, cy, circleR = 24, position = "left" } = Object.assign(
 			{},
 			getCenterOfElement(this._canvas.node),
 			options

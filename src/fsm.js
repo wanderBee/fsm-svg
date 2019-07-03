@@ -15,6 +15,7 @@ import Link from "./link";
 let __initialized = false;
 const ANIME_DURATION = 1600;
 const ANIME_EASING_BEZIER = "cubicBezier(.5, .05, .1, .3)";
+const F_GRADIENT = 2;
 
 export default class Fsm {
 	constructor(canvas) {
@@ -209,99 +210,110 @@ function link(fsm, sIndex, tIndex) {
 	});
 }
 
-// calc curve
-function calcLinkPoint(fsm, sIndex, tIndex) {
+function isOuterCurve(fsm, sIndex, tIndex, curve) {
+	const statesLength = fsm._states.length;
+	const stateS = fsm._states[sIndex];
+	const stateT = fsm._states[tIndex];
+
+	let x1, y1, x2, y2, k2, midX, midY;
+	x1 = stateS.cx;
+	y1 = stateS.cy;
+	x2 = stateT.cx;
+	y2 = stateT.cy;
+	k2 = -(x2 - x1) / (y2 - y1);
+	midX = (x1 + x2) / 2;
+	midY = (y1 + y2) / 2;
+
+	let { cx, cy } = getCenterOfElement(fsm.canvas.node);
+
+	if (k2 >= F_GRADIENT || k2 <= -F_GRADIENT) {
+		midX = midY;
+		cx = cy;
+	}
+	if ((midX > cx && curve > 0) || (midX < cx && curve < 0)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function calcCurve(fsm, sIndex, tIndex) {
 	const stateS = fsm._states[sIndex];
 	const stateT = fsm._states[tIndex];
 	const theta1 = stateS.theta;
 	const theta2 = stateT.theta;
 	const tranformAngle = 360 / fsm._states.length;
 	const curvQuot = tranformAngle / 90;
-	const curv1 = -0.58 * curvQuot;
-	const curv2 = 0.58 * curvQuot;
-	const offsetRad = 18;
-	const inArea = inWhichArea(theta1, theta2);
+	const curv = 0.58 * curvQuot;
 
-	// calc curve
-	let calcCurve = 0;
-	if (Math.abs(tIndex - sIndex) > 1) {
-		calcCurve = 0;
-	} else if (
-		(inArea == "top" && sIndex < tIndex) ||
-		(inArea == "right" && sIndex > tIndex) ||
-		(inArea == "bottom" && sIndex > tIndex) ||
-		(inArea == "left" && sIndex > tIndex)
-	) {
-		calcCurve = curv1;
-	} else if (
-		(inArea == "top" && sIndex > tIndex) ||
-		(inArea == "right" && sIndex < tIndex) ||
-		(inArea == "bottom" && sIndex < tIndex) ||
-		(inArea == "left" && sIndex < tIndex)
-	) {
-		calcCurve = curv2;
+	if (sIndex === 0 && tIndex === fsm._states.length - 1) {
+		sIndex = fsm._states.length;
+	} else if (tIndex === 0 && sIndex === fsm._states.length - 1) {
+		tIndex = fsm._states.length;
 	}
+	let multiple = sIndex < tIndex ? 1 : -1;
+
+	if (Math.abs(sIndex - tIndex) === 1) {
+		if (inLeftArea(theta1) && inLeftArea(theta2)) {
+			return multiple * curv * -1;
+		} else if (inRightArea(theta1) && inRightArea(theta2)) {
+			return multiple * curv;
+		} else if (inTopArea(theta1) && inTopArea(theta2)) {
+			return multiple * curv * -1;
+		} else if (inBottomArea(theta1) && inBottomArea(theta2)) {
+			return multiple * curv;
+		}
+	}
+
+	return 0;
+}
+
+// calc curve
+function calcLinkPoint(fsm, sIndex, tIndex) {
+	const stateS = fsm._states[sIndex];
+	const stateT = fsm._states[tIndex];
+	const theta1 = stateS.theta;
+	const theta2 = stateT.theta;
+
+	let offsetRad = 18;
+	let curve = calcCurve(fsm, sIndex, tIndex);
 
 	// calc link-point
 	let x1, y1, x2, y2, rad1, rad2;
-
-	if (calcCurve == 0) {
-		rad1 = theta1 + 180 + offsetRad;
-		rad2 = theta2 + 180 - offsetRad;
-	} else if (
-		(inArea == "top" && calcCurve > 0) ||
-		(inArea == "right" && calcCurve < 0) ||
-		(inArea == "bottom" && calcCurve < 0) ||
-		(inArea == "left" && calcCurve > 0)
-	) {
-		rad1 = theta1 + 180 + offsetRad;
-		rad2 = theta2 + 180 - offsetRad;
-	} else {
+	let isOuterLine = isOuterCurve(fsm, sIndex, tIndex, curve);
+	if (isOuterLine) {
 		rad1 = theta1 + offsetRad;
 		rad2 = theta2 - offsetRad;
+	} else {
+		rad1 = theta1 + offsetRad + 180;
+		rad2 = theta2 - offsetRad + 180;
 	}
 
-	x1 = stateS.g.circle.cx + stateS.circleR * Math.cos((rad1 / 180) * Math.PI);
-	y1 =
-		stateS.g.circle.cy + stateS.circleR * Math.sin((rad1 / 180) * Math.PI) - 1;
-
-	x2 = stateT.g.circle.cx + stateT.circleR * Math.cos((rad2 / 180) * Math.PI);
-	y2 =
-		stateT.g.circle.cy + stateT.circleR * Math.sin((rad2 / 180) * Math.PI) - 1;
+	x1 = stateS.cx + stateS.circleR * Math.cos((rad1 / 180) * Math.PI);
+	y1 = stateS.cy + stateS.circleR * Math.sin((rad1 / 180) * Math.PI) - 1;
+	x2 = stateT.cx + stateT.circleR * Math.cos((rad2 / 180) * Math.PI);
+	y2 = stateT.cy + stateT.circleR * Math.sin((rad2 / 180) * Math.PI) - 1;
 
 	return {
 		x1,
 		y1,
 		x2,
 		y2,
-		curv: calcCurve
+		curv: curve
 	};
 }
 
-function inWhichArea(theta1, theta2) {
-	return inRightArea(theta1, theta2)
-		? "right"
-		: inTopArea(theta1, theta2)
-		? "top"
-		: inBottomArea(theta1, theta2)
-		? "bottom"
-		: inLeftArea(theta1, theta2)
-		? "left"
-		: "";
+function inTopArea(theta) {
+	return theta >= -180 && theta <= 0;
 }
-function inTopArea(theta1, theta2) {
-	return theta1 >= -180 && theta1 <= 0 && theta2 >= -180 && theta2 <= 0;
+function inRightArea(theta) {
+	return theta >= -90 && theta <= 90;
 }
-function inRightArea(theta1, theta2) {
-	return theta1 >= -90 && theta1 <= 90 && theta2 >= -90 && theta2 <= 90;
+function inBottomArea(theta) {
+	return theta >= 0 && theta <= 180;
 }
-function inBottomArea(theta1, theta2) {
-	return theta1 >= 0 && theta1 <= 180 && theta2 >= 0 && theta2 <= 180;
-}
-function inLeftArea(theta1, theta2) {
-	return;
-	((theta1 >= -180 && theta1 <= 90) || (theta1 >= 90 && theta1 <= 180)) &&
-		((theta2 >= -180 && theta2 <= 90) || (theta2 >= 90 && theta2 <= 180));
+function inLeftArea(theta) {
+	return (theta >= -180 && theta <= -90) || (theta >= 90 && theta <= 180);
 }
 
 function getColor(fsm) {
@@ -337,7 +349,7 @@ function getTransformFunc(fsm, statesCount, stateIndex) {
 			theta: theta,
 			cx: cx + displayCircleR * Math.cos(thetaFPi),
 			cy: cy + displayCircleR * Math.sin(thetaFPi),
-			position: theta > -90 && theta < 90 ? "right" : "left"
+			position: theta > -90 && theta <= 90 ? "right" : "left"
 		};
 	};
 }

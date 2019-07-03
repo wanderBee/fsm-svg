@@ -1,6 +1,8 @@
 import { assert } from "./util";
 import Point from "./point";
 
+const F_GRADIENT = 2;
+
 export default class Link {
 	/**
 	 * source { x, y }
@@ -67,7 +69,8 @@ function svgPathCubicCurve(x1, y1, x2, y2, curv) {
 	k2 = -(x2 - x1) / (y2 - y1);
 	let curvF = curv * cf,
 		curvRad = Math.atan(1 / Math.abs(k2));
-	if (k2 < 2 && k2 > -2) {
+
+	if (k2 < F_GRADIENT && k2 > -F_GRADIENT) {
 		controX1 =
 			x2 * innerCurv + x1 * (1 - innerCurv) + curvF * Math.sin(curvRad);
 		controX1 = controX1 < 0 ? -controX1 : controX1;

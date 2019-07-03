@@ -18,14 +18,14 @@ fsm.setOption({
 			label: "Exit"
 		}
 	],
-	links: [[0, 1], [0, 2], [1, 0], [1, 0], [1, 2], [2, 0], [2, 1]]
+	links: [[0, 1], [1, 0], [1, 2], [2, 1], [0, 2], [2, 0]]
 });
 
 // animation
 var animeIndex = 1;
 var duration = 1600; // default anime duration
 
-fsm.scale(animeIndex, 1.4);
+fsm.scale(animeIndex, 1.35);
 setTimeout(() => {
 	// restore
 	fsm.scale(animeIndex, 1);
