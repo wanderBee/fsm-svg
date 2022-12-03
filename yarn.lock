@@ -691,18 +691,6 @@
     resolve-from "5.0.0"
     resolve-global "1.0.0"
 
-"@commitlint/config-angular-type-enum@^7.6.0":
-  version "7.6.0"
-  resolved "https://registry.npm.taobao.org/@commitlint/config-angular-type-enum/download/@commitlint/config-angular-type-enum-7.6.0.tgz#9c3ffff18037b375a078eb704d118c7929968a49"
-  integrity sha1-nD//8YA3s3WgeOtwTRGMeSmWikk=
-
-"@commitlint/config-angular@^7.6.0":
-  version "7.6.0"
-  resolved "https://registry.npm.taobao.org/@commitlint/config-angular/download/@commitlint/config-angular-7.6.0.tgz#41d4ce9698d9ae5eb858a8a8e90bc64e1507f3a3"
-  integrity sha1-QdTOlpjZrl64WKio6QvGThUH86M=
-  dependencies:
-    "@commitlint/config-angular-type-enum" "^7.6.0"
-
 "@commitlint/config-conventional@^8.0.0":
   version "8.0.0"
   resolved "https://registry.npmjs.org/@commitlint/config-conventional/-/config-conventional-8.0.0.tgz#f45349cab9dcfc08a30fbcf2b6317506e17bc8e6"
@@ -2365,9 +2353,9 @@ decamelize@^1.1.0, decamelize@^1.2.0:
   integrity sha1-9lNNFRSCabIDUue+4m9QH5oZEpA=
 
 decode-uri-component@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.npm.taobao.org/decode-uri-component/download/decode-uri-component-0.2.0.tgz#eb3913333458775cb84cd1a1fae062106bb87545"
-  integrity sha1-6zkTMzRYd1y4TNGh+uBiEGu4dUU=
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/decode-uri-component/-/decode-uri-component-0.2.2.tgz#e69dbe25d37941171dd540e024c444cd5188e1e9"
+  integrity sha512-FqUYQ+8o158GyGTrMFJms9qh3CqTKvAqgqsTnkLI8sKu0028orqBhxNMFkFen0zGyg6epACD32pjVk58ngIErQ==
 
 deep-extend@^0.6.0:
   version "0.6.0"
